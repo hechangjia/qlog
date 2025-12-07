@@ -1,5 +1,5 @@
 {
-  "runWizardOnStartup": true,
+  "runWizardOnStartup": false,
   "currentTemplate": "standard",
   "currentTheme": "oxygen",
   "customThemeFile": "custom",
@@ -21,7 +21,7 @@
     "defaultOgImageAlt": "Astro Modular logo."
   },
   "layout": {
-    "contentWidth": "45rem"
+    "contentWidth": "66.2rem"
   },
   "tableOfContents": {
     "enabled": true,
@@ -43,6 +43,14 @@
       {
         "title": "文章",
         "url": "/posts/"
+      },
+      {
+        "title": "日志",
+        "url": "/diary/"
+      },
+      {
+        "title": "ToDo",
+        "url": "/todo/"
       },
       {
         "title": "项目",
@@ -71,13 +79,13 @@
   },
   "commandPalette": {
     "enabled": true,
-    "shortcut": "ctrl+K",
-    "placeholder": "Search posts",
+    "shortcut": "ctrl+shift+K",
+    "placeholder": "搜索文章",
     "search": {
       "posts": true,
-      "pages": false,
-      "projects": false,
-      "docs": false
+      "pages": true,
+      "projects": true,
+      "docs": true
     },
     "sections": {
       "quickActions": true,
@@ -99,7 +107,7 @@
     },
     "recentPosts": {
       "enabled": true,
-      "count": 7
+      "count": 8
     },
     "projects": {
       "enabled": true,
@@ -175,8 +183,8 @@
     }
   },
   "typography": {
-    "headingFont": "Inter",
-    "proseFont": "Inter",
+    "headingFont": "Fira Code",
+    "proseFont": "Source Sans Pro",
     "monoFont": "JetBrains Mono",
     "fontSource": "local",
     "fontDisplay": "swap",

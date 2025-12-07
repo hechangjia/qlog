@@ -21,5 +21,9 @@
   "bases-cms",
   "oxygen-settings",
   "astro-modular-settings",
-  "obsidian42-brat"
+  "obsidian42-brat",
+  "dataview",
+  "templater-obsidian",
+  "calendar",
+  "obsidian-icon-folder"
 ]

@@ -10,7 +10,7 @@ aliases:
 ---
 ## 为什么取名Qlog？
 
->[!success]+ 表面意思
+>[!success]+ 字面意思
 >Qlog = QQzone + Blog + Obsidian
 >使用Obsidian作为Markdown编辑器，写一些文章，发布到自己的博客上，发布到网络上，通过QQ空间分享。
 
