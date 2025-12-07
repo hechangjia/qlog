@@ -217,7 +217,7 @@ export const siteConfig: SiteConfig = {
   },
   layout: {
     // [CONFIG:LAYOUT_CONTENT_WIDTH]
-    contentWidth: "45rem",
+    contentWidth: "66.2rem",
   },
   tableOfContents: {
     // [CONFIG:TABLE_OF_CONTENTS_ENABLED]
@@ -238,7 +238,7 @@ export const siteConfig: SiteConfig = {
   // [CONFIG:SCROLL_TO_TOP]
   scrollToTop: true,
   // [CONFIG:FEATURE_BUTTON]
-  featureButton: "mode", // "mode" | "graph" | "theme" | "none"
+  featureButton: "graph", // "mode" | "graph" | "theme" | "none"
   deployment: {
     // [CONFIG:DEPLOYMENT_PLATFORM]
     platform: "netlify", // "netlify" | "vercel" | "github-pages" | "cloudflare-workers" - sets redirect configuration for the chosen platform (Cloudflare Workers uses Workers-compatible config)
@@ -249,18 +249,18 @@ export const siteConfig: SiteConfig = {
     // [CONFIG:COMMAND_PALETTE_ENABLED]
     enabled: true,
     // [CONFIG:COMMAND_PALETTE_SHORTCUT]
-    shortcut: "ctrl+K",
+    shortcut: "ctrl+shift+K",
     // [CONFIG:COMMAND_PALETTE_PLACEHOLDER]
-    placeholder: "Search posts",
+    placeholder: "搜索文章",
     search: {
       // [CONFIG:COMMAND_PALETTE_SEARCH_POSTS]
       posts: true,
       // [CONFIG:COMMAND_PALETTE_SEARCH_PAGES]
-      pages: false,
+      pages: true,
       // [CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS]
-      projects: false,
+      projects: true,
       // [CONFIG:COMMAND_PALETTE_SEARCH_DOCS]
-      docs: false,
+      docs: true,
     },
     sections: {
       // [CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS]
@@ -364,14 +364,14 @@ export const siteConfig: SiteConfig = {
     },
     blurb: {
       // [CONFIG:HOME_OPTIONS_BLURB_PLACEMENT]
-      placement: "below", // 'above' (at the top), 'below' (after content), or 'none' (disabled)
+      placement: "above", // 'above' (at the top), 'below' (after content), or 'none' (disabled)
     },
   },
 
   // Post Options
   postOptions: {
     // [CONFIG:POST_OPTIONS_POSTS_PER_PAGE]
-    postsPerPage: 6,
+    postsPerPage: 8,
     // [CONFIG:POST_OPTIONS_READING_TIME]
     readingTime: true,
     // [CONFIG:POST_OPTIONS_WORD_COUNT]
