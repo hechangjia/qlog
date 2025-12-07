@@ -12,14 +12,14 @@
       "type": "post",
       "title": "Getting Started",
       "slug": "getting-started",
-      "connections": 6
+      "connections": 7
     },
     {
       "id": "obsidian-embeds-demo",
       "type": "post",
       "title": "Obsidian Embeds Demo",
       "slug": "obsidian-embeds-demo",
-      "connections": 0
+      "connections": 1
     },
     {
       "id": "sample-folder-based-post",
@@ -34,6 +34,13 @@
       "title": "Vault CMS Guide",
       "slug": "vault-cms-guide",
       "connections": 0
+    },
+    {
+      "id": "zootopia",
+      "type": "post",
+      "title": "糊涂蛋-🐰朱迪-🦊尼克",
+      "slug": "zootopia",
+      "connections": 2
     }
   ],
   "connections": [
@@ -116,12 +123,22 @@
       "source": "getting-started",
       "target": "formatting-reference",
       "type": "link"
+    },
+    {
+      "source": "zootopia",
+      "target": "getting-started",
+      "type": "link"
+    },
+    {
+      "source": "zootopia",
+      "target": "obsidian-embeds-demo",
+      "type": "link"
     }
   ],
   "metadata": {
-    "totalPosts": 5,
-    "totalConnections": 16,
+    "totalPosts": 6,
+    "totalConnections": 18,
     "maxNodesApplied": false,
-    "originalNodeCount": 5
+    "originalNodeCount": 6
   }
 }

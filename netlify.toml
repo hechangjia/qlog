@@ -1,149 +1,129 @@
-[build]
-  publish = "dist"
-  command = "pnpm run build"
+[Settings]
+  ID = "91b5b211-fe48-4f0d-9846-e47f8e19a853"
 
-[build.environment]
-  NODE_VERSION = "18"
-  PNPM_VERSION = "8"
+[Build]
+  Publish = "dist"
+  Functions = ""
 
-# Enable compression for all text-based files
-# Note: Netlify automatically handles gzip/brotli compression based on client support
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "public, max-age=3600, s-maxage=86400"
+[[Redirects]]
+  From = "/about-me"
+  To = "/about"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/about-us"
+  To = "/about"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/contact-me"
+  To = "/contact"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*.json"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
+[[Redirects]]
+  From = "/contact-us"
+  To = "/contact"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*.xml"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
+[[Redirects]]
+  From = "/privacy"
+  To = "/privacy-policy"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*.txt"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
+[[Redirects]]
+  From = "/posts/mermaid-test"
+  To = "/posts/obsidian-embeds-demo"
+  Status = 301
+  Force = true
 
-# Handle pre-compressed files
-[[headers]]
-  for = "/*.gz"
-  [headers.values]
-    Content-Encoding = "gzip"
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/mermaid-diagram-test"
+  To = "/posts/obsidian-embeds-demo"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*.br"
-  [headers.values]
-    Content-Encoding = "br"
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/mermaid-diagrams"
+  To = "/posts/obsidian-embeds-demo"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Cross-Origin-Embedder-Policy = "unsafe-none"
-    Cross-Origin-Opener-Policy = "same-origin"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://giscus.app https://platform.twitter.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://giscus.app; frame-src 'self' https://www.youtube.com https://giscus.app https://platform.twitter.com; object-src 'none'; base-uri 'self';"
+[[Redirects]]
+  From = "/posts/astro-suite-vault-modular-guide"
+  To = "/posts/vault-cms-guide"
+  Status = 301
+  Force = true
 
-# Static assets with long-term caching
-[[headers]]
-  for = "/_assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/astro-suite-obsidian-vault-guide-astro-modular"
+  To = "/posts/vault-cms-guide"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.webp"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/obsidian-vault-guide"
+  To = "/posts/vault-cms-guide"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.woff2"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/疯狂动物城"
+  To = "/posts/zootopia"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.woff"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/糊涂蛋"
+  To = "/posts/zootopia"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.ttf"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/posts/Zootopia"
+  To = "/posts/zootopia"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.eot"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/projects/obsidian-astro-composer"
+  To = "/projects/astro-composer"
+  Status = 301
+  Force = true
 
-# Images with long-term caching
-[[headers]]
-  for = "*.jpg"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/projects/obsidian-astro-suite"
+  To = "/projects/vault-cms"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.jpeg"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/docs/api-reference"
+  To = "/docs/api"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.png"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/docs/astro-modular-configuration"
+  To = "/docs/configuration"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.gif"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[Redirects]]
+  From = "/docs/sourcetree-and-git"
+  To = "/docs/sourcetree-and-git-setup"
+  Status = 301
+  Force = true
 
-[[headers]]
-  for = "*.svg"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "*.ico"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# PDF files - allow iframe embedding
-[[headers]]
-  for = "*.pdf"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
-    X-Frame-Options = "SAMEORIGIN"
-
-# Favicon files
-[[headers]]
-  for = "/favicon*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[dev]
-  command = "pnpm run dev"
-  port = 5000
-  publish = "dist"
-
-# Generated redirects from content aliases
+[[Redirects]]
+  From = "/*"
+  To = "/404"
+  Status = 404
+  Force = false
 
 [[redirects]]
   from = "/about-me"
@@ -208,6 +188,24 @@
 [[redirects]]
   from = "/posts/obsidian-vault-guide"
   to = "/posts/vault-cms-guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/posts/疯狂动物城"
+  to = "/posts/zootopia"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/posts/糊涂蛋"
+  to = "/posts/zootopia"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/posts/Zootopia"
+  to = "/posts/zootopia"
   status = 301
   force = true
 

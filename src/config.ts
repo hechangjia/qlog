@@ -180,15 +180,15 @@ export interface SiteConfig {
 export const siteConfig: SiteConfig = {
   // Site Information
   // [CONFIG:SITE_URL]
-  site: "https://astro-modular.netlify.app",
+  site: "https://qlog.netlify.app",
   // [CONFIG:SITE_TITLE]
-  title: "Astro Modular",
+  title: "小镇错题家",
   // [CONFIG:SITE_DESCRIPTION]
-  description: "A flexible blog theme designed for Obsidian users.",
+  description: "QqZone + Blog + Obsidian",
   // [CONFIG:SITE_AUTHOR]
-  author: "David V. Kimball",
+  author: "贺昌嘉",
   // [CONFIG:SITE_LANGUAGE]
-  language: "en",
+  language: "zh-CN",
   // [CONFIG:FAVICON_THEME_ADAPTIVE]
   faviconThemeAdaptive: true, // If true, favicon switches between favicon-dark.png and favicon-light.png based on browser's system theme preference. If false, always uses favicon.png
   // [CONFIG:DEFAULT_OG_IMAGE_ALT]
@@ -285,13 +285,13 @@ export const siteConfig: SiteConfig = {
   // Profile Picture
   profilePicture: {
     // [CONFIG:PROFILE_PICTURE_ENABLED]
-    enabled: false, 
+    enabled: true, 
     // [CONFIG:PROFILE_PICTURE_IMAGE]
     image: "/profile.jpg", // Path to your profile image (place in public/ directory)
     // [CONFIG:PROFILE_PICTURE_ALT]
     alt: "Profile picture",
     // [CONFIG:PROFILE_PICTURE_SIZE]
-    size: "md", // "sm" (32px), "md" (48px), or "lg" (64px) - only affects footer placement
+    size: "lg", // "sm" (32px), "md" (48px), or "lg" (64px) - only affects footer placement
     // [CONFIG:PROFILE_PICTURE_URL]
     url: "", // Optional
     // [CONFIG:PROFILE_PICTURE_PLACEMENT]
@@ -310,22 +310,17 @@ export const siteConfig: SiteConfig = {
     showMobileMenu: true,
     // [CONFIG:NAVIGATION_PAGES]
     pages: [
-      { title: "Posts", url: "/posts/" },
-      { title: "Projects", url: "/projects/" },
-      { title: "Docs", url: "/docs/" },
-      { title: "About", url: "/about/" },
-      { title: "GitHub", url: "https://github.com/davidvkimball/astro-modular" },
+      { title: "文章", url: "/posts/" },
+      { title: "项目", url: "/projects/" },
+      { title: "文档", url: "/docs/" },
+      { title: "关于", url: "/about/" },
+      { title: "GitHub", url: "https://github.com/hechang/qlogjia" },
     ],
     // [CONFIG:NAVIGATION_SOCIAL]
     social: [
       {
-        title: "X",
-        url: "https://x.com/davidvkimball",
-        icon: "x-twitter",
-      },
-      {
         title: "GitHub",
-        url: "https://github.com/davidvkimball",
+        url: "https://github.com/hechangjia",
         icon: "github",
       },
     ],

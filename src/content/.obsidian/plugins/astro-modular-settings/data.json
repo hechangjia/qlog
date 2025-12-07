@@ -12,11 +12,11 @@
     }
   },
   "siteInfo": {
-    "site": "https://astro-modular.netlify.app",
-    "title": "Astro Modular",
-    "description": "A flexible blog theme designed for Obsidian users.",
-    "author": "David V. Kimball",
-    "language": "en",
+    "site": "https://qlog.netlify.app",
+    "title": "小镇错题家",
+    "description": "QqZone + Blog + Obsidian",
+    "author": "贺昌嘉",
+    "language": "zh-CN",
     "faviconThemeAdaptive": true,
     "defaultOgImageAlt": "Astro Modular logo."
   },
@@ -41,35 +41,30 @@
     "showMobileMenu": true,
     "pages": [
       {
-        "title": "Posts",
+        "title": "文章",
         "url": "/posts/"
       },
       {
-        "title": "Projects",
+        "title": "项目",
         "url": "/projects/"
       },
       {
-        "title": "Docs",
+        "title": "文档",
         "url": "/docs/"
       },
       {
-        "title": "About",
+        "title": "关于",
         "url": "/about/"
       },
       {
         "title": "GitHub",
-        "url": "https://github.com/davidvkimball/astro-modular"
+        "url": "https://github.com/hechang/qlogjia"
       }
     ],
     "social": [
       {
-        "title": "X",
-        "url": "https://x.com/davidvkimball",
-        "icon": "x-twitter"
-      },
-      {
         "title": "GitHub",
-        "url": "https://github.com/davidvkimball",
+        "url": "https://github.com/hechangjia",
         "icon": "github"
       }
     ]
@@ -166,7 +161,7 @@
     "hideScrollBar": false,
     "scrollToTop": true,
     "showSocialIconsInFooter": true,
-    "profilePicture": false,
+    "profilePicture": true,
     "comments": false,
     "featureButton": "mode",
     "showPostCardCoverImages": "featured-and-posts",
@@ -194,10 +189,10 @@
   },
   "optionalFeatures": {
     "profilePicture": {
-      "enabled": false,
+      "enabled": true,
       "image": "/profile.jpg",
       "alt": "Profile picture",
-      "size": "md",
+      "size": "lg",
       "url": "",
       "placement": "footer",
       "style": "circle"

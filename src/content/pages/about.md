@@ -1,6 +1,6 @@
 ---
-title: About
-description: Learn more about Astro Modular and the philosophy behind its design approach.
+title: 关于
+description: 这是Qlog 这个网站的介绍
 noIndex: false
 hideTOC: false
 draft: false
@@ -8,38 +8,33 @@ aliases:
   - about-me
   - about-us
 ---
-Welcome to **Astro Modular**, an Astro blog theme template designed for Obsidian users, created by [David V. Kimball](https://davidvkimball.com). This theme turns Obsidian into a powerful CMS for instant blog publishing.
+## 为什么取名Qlog？
 
-## Philosophy
+>[!success]+ 表面意思
+>Qlog = QQzone + Blog + Obsidian
+>使用Obsidian作为Markdown编辑器，写一些文章，发布到自己的博客上，发布到网络上，通过QQ空间分享。
 
-Great content deserves great presentation without complexity. This blog theme is built on four core principles:
+### 为什么是QQ空间
 
-### Clarity First
-Content should be the star, not the design. Every element is carefully crafted to enhance readability and focus attention on what matters most - your ideas and writing.
+>[!important]+ 会有正反馈
+>如果仅仅是把自己写的文章发布到博客上的会，会因为得不到及时的反馈，毕竟刚开始人看的也很少，就会逐渐失去写作的动力。
+>而QQ空间这是一个比较好的平台：
+>1. 发布到QQ空间后，朋友看到会进行点赞👍，这无疑就是一种肯定😀，会激励自己继续进行创作。
+>2. QQ空间不同于微信的pyq，他可以看到谁谁谁哪时候访问了你，这样你就知道自己在意的人是不是看到了。🤫
 
-### Highly Performant
-Fast loading times and smooth interactions are not optional. Every aspect of this theme has been optimized to deliver exceptional performance across all devices.
+### 使用哪款博客框架？
+>[!important]+ astro-modular
+>之前尝试了许多静态博客框架，第一款是**hexo**,接着是**hugo**，**jekyll**$\cdots$，不过当初刚上手的时候把主要精力放在博客的美化上面了，而没有花时间去写内容😂
+>现在，我感觉找到了一款适合小白上手的主题[astro-modular](https://github.com/davidvkimball/astro-modular),基于**Astro**，将Obsidian作为CMS[^1]，这样折腾的对象就从博客本身转移到了Obsidian了(不过Obsidian 折腾起来也挺费劲的，不过好在本身的效果就已经很不错了。🤪)
 
-### Works with Obsidian
-If you use Obsidian, this theme is a natural extension of your workflow. All rich markdown and extended markdown features, including Wikilinks, callouts, and other embedded features, display seamlessly between your vault and published site.
+### 哪款Markdown编辑器？
+>[!important]+ 当然是Obsidian🥰
+>1. [astro-modular](https://github.com/davidvkimball/astro-modular)就是专门为obsidian创作的。原生支持Obsidian的特性，诸如*footnote*,*callouts*,*toc*,*双链*.
+>2. Obsdian 的插件系统非常的强大。
 
-### Modular Design
-Every feature can be toggled on or off through a single configuration file. Enable only what you need, keeping your site fast and focused on your specific use case.
+演示1：[糊涂蛋-🐰朱迪-🦊尼克](posts/zootopia.md)
+演示2：[Getting Started](posts/getting-started.md)
 
----
 
-## Pages to Check Out
+[^1]: CMS：Content Manage System.内容管理系统。
 
-- [Contact](pages/contact.md) page with a form
-- [Thank You](pages/thank-you.md) page where submitters are directed after a successful submission 
-- [Privacy Policy](pages/privacy-policy.md) page
-
----
-
-## Posts to Check Out
-- [[getting-started|Getting Started]]
-- [Astro Suite Vault (Modular) Guide](posts/astro-suite-vault-modular-guide.md) 
-
----
-![Water droplet](attachments/water.png)
-*Photo by [Herbert Goetsch](https://unsplash.com/@hg_photo?utm_source=Obsidian%20Image%20Inserter%20Plugin&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=Obsidian%20Image%20Inserter%20Plugin&utm_medium=referral)*
