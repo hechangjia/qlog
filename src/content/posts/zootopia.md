@@ -7,7 +7,7 @@ tags:
   - Z-image
   - GPT-SoVITS
   - NanoBanana
-image: "[[attachments/zootopia/Zootopia-cover.png]]"
+image: "[[attachments/zootopia/Zootopia-cover.webp]]"
 imageAlt: Zootopia
 imageOG: false
 hideCoverImage: false
@@ -22,16 +22,16 @@ aliases:
 # 图库[^1]
 
 ## 🐰朱迪，🦊尼克，🐍盖瑞，🦫河狸
-![Zootopia2](attachments/zootopia/Zootopia-cover.png)
+![Zootopia2](attachments/zootopia/Zootopia-cover.webp)
 
 ## 合照
-![partner1](attachments/zootopia/Zootopia-1.png)
-![partner2](attachments/zootopia/Zootopia-2.png)
+![partner1](attachments/zootopia/Zootopia-1.webp)
+![partner2](attachments/zootopia/Zootopia-2.webp)
 
 ## 拥抱
-![stars](attachments/zootopia/stars.png)
-![embrace](attachments/zootopia/embrace.png)
-![lifu](attachments/zootopia/Zootopia-3.jpg)
+![stars](attachments/zootopia/stars.webp)
+![embrace](attachments/zootopia/embrace.webp)
+![lifu](attachments/zootopia/Zootopia-3.webp)
 
 [^1]: 呃🤔，其实我不太嗑CP的。
 
@@ -54,7 +54,7 @@ aliases:
 
 # 片尾曲 **Shakira - Zoo**
 
-![Shakira - Zoo](attachments/zootopia/Zoo.mp4)
+![Shakira - Zoo](attachments/zootopia/Zoo.webm)
 
 [Getting Started](posts/getting-started.md)
 

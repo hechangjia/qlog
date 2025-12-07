@@ -47,6 +47,10 @@
       "plugin-properties;1": {
         "position": 11,
         "visible": true
+      },
+      "plugin-obsidian-git-obsidian-git-statusbar-idle-obsidian-git-statusbar-status;1": {
+        "position": 12,
+        "visible": true
       }
     }
   },
