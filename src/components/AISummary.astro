@@ -1,0 +1,456 @@
+---
+/**
+ * AISummary - AI 智能总结组件
+ * 显示周/月/年度写作总结
+ */
+import { siteConfig } from "@/config";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+// 检查是否启用
+const aiConfig = siteConfig.statsFeatures?.aiSummary;
+const isEnabled = aiConfig?.enabled ?? false;
+const summaryTypes = aiConfig?.summaryTypes ?? {
+  weekly: true,
+  monthly: true,
+  yearly: true,
+};
+---
+
+{isEnabled && (
+  <div class:list={["ai-summary", className]} id="ai-summary">
+    <div class="summary-header">
+      <h3 class="summary-title">AI 总结</h3>
+      <button
+        class="refresh-btn"
+        id="summary-refresh-btn"
+        title="刷新总结"
+        disabled
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 2v6h-6"></path>
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+          <path d="M3 22v-6h6"></path>
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="summary-tabs" id="summary-tabs">
+      {summaryTypes.weekly && (
+        <button class="tab-btn active" data-type="weekly">周</button>
+      )}
+      {summaryTypes.monthly && (
+        <button class="tab-btn" data-type="monthly">月</button>
+      )}
+      {summaryTypes.yearly && (
+        <button class="tab-btn" data-type="yearly">年</button>
+      )}
+    </div>
+
+    <div class="summary-content" id="summary-content">
+      <div class="summary-placeholder">
+        <span class="placeholder-icon">✨</span>
+        <span class="placeholder-text">点击标签查看 AI 总结</span>
+      </div>
+    </div>
+
+    <div class="summary-meta" id="summary-meta"></div>
+  </div>
+)}
+
+<script>
+  type SummaryType = "weekly" | "monthly" | "yearly";
+
+  interface SummaryResponse {
+    success: boolean;
+    type: SummaryType;
+    period: string;
+    postCount: number;
+    summary: string;
+    generatedAt: string;
+    error?: string;
+  }
+
+  interface CachedSummary {
+    data: SummaryResponse;
+    cachedAt: number;
+  }
+
+  const CACHE_KEY_PREFIX = "ai-summary-";
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 分钟
+  const COOLDOWN_DURATION = 30 * 1000; // 30 秒刷新冷却
+
+  let currentType: SummaryType = "weekly";
+  let isLoading = false;
+  let lastRefreshTime = 0;
+
+  // 获取缓存
+  function getCache(type: SummaryType): CachedSummary | null {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY_PREFIX + type);
+      if (cached) {
+        const data: CachedSummary = JSON.parse(cached);
+        if (Date.now() - data.cachedAt < CACHE_DURATION) {
+          return data;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to read cache:", e);
+    }
+    return null;
+  }
+
+  // 设置缓存
+  function setCache(type: SummaryType, data: SummaryResponse): void {
+    try {
+      const cacheData: CachedSummary = {
+        data,
+        cachedAt: Date.now(),
+      };
+      localStorage.setItem(CACHE_KEY_PREFIX + type, JSON.stringify(cacheData));
+    } catch (e) {
+      console.warn("Failed to set cache:", e);
+    }
+  }
+
+  // 清除缓存
+  function clearCache(type?: SummaryType): void {
+    try {
+      if (type) {
+        localStorage.removeItem(CACHE_KEY_PREFIX + type);
+      } else {
+        ["weekly", "monthly", "yearly"].forEach((t) => {
+          localStorage.removeItem(CACHE_KEY_PREFIX + t);
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to clear cache:", e);
+    }
+  }
+
+  // 获取总结
+  async function fetchSummary(
+    type: SummaryType,
+    forceRefresh = false
+  ): Promise<SummaryResponse> {
+    // 检查缓存
+    if (!forceRefresh) {
+      const cached = getCache(type);
+      if (cached) {
+        return cached.data;
+      }
+    }
+
+    // 发起请求
+    const response = await fetch("/api/generate-summary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ type }),
+    });
+
+    const data: SummaryResponse = await response.json();
+
+    if (data.success) {
+      setCache(type, data);
+    }
+
+    return data;
+  }
+
+  // 更新 UI
+  function updateUI(response: SummaryResponse): void {
+    const content = document.getElementById("summary-content");
+    const meta = document.getElementById("summary-meta");
+
+    if (!content) return;
+
+    if (response.error) {
+      content.innerHTML = `
+        <div class="summary-error">
+          <span class="error-icon">⚠️</span>
+          <span class="error-text">${response.error}</span>
+        </div>
+      `;
+      if (meta) meta.innerHTML = "";
+      return;
+    }
+
+    content.innerHTML = `
+      <div class="summary-text">${response.summary}</div>
+    `;
+
+    if (meta && response.success) {
+      const typeNames: Record<SummaryType, string> = {
+        weekly: "本周",
+        monthly: "本月",
+        yearly: "今年",
+      };
+      meta.innerHTML = `
+        <span class="meta-period">${typeNames[response.type]} · ${response.period}</span>
+        <span class="meta-count">${response.postCount} 篇文章</span>
+      `;
+    }
+  }
+
+  // 显示加载状态
+  function showLoading(): void {
+    const content = document.getElementById("summary-content");
+    if (content) {
+      content.innerHTML = `
+        <div class="summary-loading">
+          <div class="loading-spinner"></div>
+          <span class="loading-text">AI 正在生成总结...</span>
+        </div>
+      `;
+    }
+  }
+
+  // 更新刷新按钮状态
+  function updateRefreshButton(): void {
+    const btn = document.getElementById(
+      "summary-refresh-btn"
+    ) as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshTime;
+    const cooldownRemaining = COOLDOWN_DURATION - timeSinceLastRefresh;
+
+    if (isLoading || cooldownRemaining > 0) {
+      btn.disabled = true;
+      if (cooldownRemaining > 0 && !isLoading) {
+        btn.title = `冷却中 (${Math.ceil(cooldownRemaining / 1000)}秒)`;
+      }
+    } else {
+      btn.disabled = false;
+      btn.title = "刷新总结";
+    }
+  }
+
+  // 加载总结
+  async function loadSummary(type: SummaryType, forceRefresh = false): Promise<void> {
+    if (isLoading) return;
+
+    // 检查冷却时间
+    if (forceRefresh) {
+      const now = Date.now();
+      if (now - lastRefreshTime < COOLDOWN_DURATION) {
+        return;
+      }
+      lastRefreshTime = now;
+      clearCache(type);
+    }
+
+    isLoading = true;
+    currentType = type;
+    showLoading();
+    updateRefreshButton();
+
+    try {
+      const response = await fetchSummary(type, forceRefresh);
+      updateUI(response);
+    } catch (error) {
+      updateUI({
+        success: false,
+        type,
+        period: "",
+        postCount: 0,
+        summary: "",
+        generatedAt: "",
+        error: error instanceof Error ? error.message : "请求失败",
+      });
+    } finally {
+      isLoading = false;
+      updateRefreshButton();
+    }
+  }
+
+  // 初始化
+  function initAISummary(): void {
+    const tabs = document.getElementById("summary-tabs");
+    const refreshBtn = document.getElementById("summary-refresh-btn");
+
+    if (!tabs) return;
+
+    // 标签点击事件
+    tabs.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("tab-btn")) {
+        const type = target.dataset.type as SummaryType;
+        if (type) {
+          // 更新活动标签
+          tabs.querySelectorAll(".tab-btn").forEach((btn) => {
+            btn.classList.remove("active");
+          });
+          target.classList.add("active");
+
+          // 加载总结
+          loadSummary(type);
+        }
+      }
+    });
+
+    // 刷新按钮点击事件
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => {
+        loadSummary(currentType, true);
+      });
+    }
+
+    // 启用刷新按钮
+    if (refreshBtn) {
+      (refreshBtn as HTMLButtonElement).disabled = false;
+    }
+
+    // 定期更新刷新按钮状态
+    setInterval(updateRefreshButton, 1000);
+  }
+
+  // DOM Ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAISummary);
+  } else {
+    initAISummary();
+  }
+
+  // Swup 页面切换支持
+  if (typeof window !== "undefined" && (window as any).swup) {
+    (window as any).swup.hooks.on("page:view", initAISummary);
+  }
+</script>
+
+<style>
+  .ai-summary {
+    @apply p-4 rounded-lg mt-4;
+    @apply bg-primary-50 dark:bg-primary-800/50;
+    @apply border border-primary-200 dark:border-primary-700;
+  }
+
+  .summary-header {
+    @apply flex items-center justify-between mb-3;
+  }
+
+  .summary-title {
+    @apply text-sm font-medium;
+    @apply text-primary-700 dark:text-primary-200;
+    margin: 0;
+  }
+
+  .refresh-btn {
+    @apply p-1.5 rounded;
+    @apply text-primary-500 dark:text-primary-400;
+    @apply hover:bg-primary-200 dark:hover:bg-primary-700;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply transition-colors duration-150;
+  }
+
+  .refresh-btn:not(:disabled):hover svg {
+    animation: spin 0.5s ease-in-out;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .summary-tabs {
+    @apply flex gap-1 mb-3;
+  }
+
+  .tab-btn {
+    @apply px-3 py-1 rounded text-xs font-medium;
+    @apply bg-primary-100 dark:bg-primary-700;
+    @apply text-primary-600 dark:text-primary-300;
+    @apply hover:bg-primary-200 dark:hover:bg-primary-600;
+    @apply transition-colors duration-150;
+  }
+
+  .tab-btn.active {
+    @apply bg-highlight-500 text-white;
+    @apply hover:bg-highlight-600;
+  }
+
+  .summary-content {
+    @apply min-h-[80px];
+  }
+
+  .summary-placeholder {
+    @apply flex flex-col items-center justify-center py-6;
+    @apply text-primary-400 dark:text-primary-500;
+  }
+
+  .placeholder-icon {
+    @apply text-2xl mb-2;
+  }
+
+  .placeholder-text {
+    @apply text-xs;
+  }
+
+  .summary-loading {
+    @apply flex flex-col items-center justify-center py-6;
+    @apply text-primary-500 dark:text-primary-400;
+  }
+
+  .loading-spinner {
+    @apply w-6 h-6 mb-2;
+    @apply border-2 border-primary-200 dark:border-primary-600;
+    @apply border-t-highlight-500;
+    @apply rounded-full;
+    animation: spin 1s linear infinite;
+  }
+
+  .loading-text {
+    @apply text-xs;
+  }
+
+  .summary-text {
+    @apply text-sm leading-relaxed;
+    @apply text-primary-700 dark:text-primary-200;
+  }
+
+  .summary-error {
+    @apply flex items-center gap-2 py-4;
+    @apply text-red-600 dark:text-red-400;
+  }
+
+  .error-icon {
+    @apply text-lg;
+  }
+
+  .error-text {
+    @apply text-xs;
+  }
+
+  .summary-meta {
+    @apply flex items-center justify-between mt-3 pt-3;
+    @apply border-t border-primary-200 dark:border-primary-700;
+    @apply text-xs;
+    @apply text-primary-500 dark:text-primary-400;
+  }
+
+  .summary-meta:empty {
+    @apply hidden;
+  }
+</style>

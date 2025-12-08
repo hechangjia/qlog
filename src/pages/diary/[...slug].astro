@@ -1,0 +1,94 @@
+---
+import { getCollection, render } from 'astro:content';
+import { shouldShowContent } from '@/utils/markdown';
+import { siteConfig } from '@/config';
+import { generateSimpleSEO } from '@/utils/seo';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+
+export async function getStaticPaths() {
+  const diaries = await getCollection('diary');
+  const isDev = import.meta.env.DEV;
+
+  const paths = [];
+
+  for (const diary of diaries) {
+    if (!shouldShowContent(diary, isDev)) continue;
+
+    paths.push({
+      params: { slug: diary.id },
+      props: { diary }
+    });
+  }
+
+  return paths;
+}
+
+const { diary } = Astro.props;
+
+if (!diary) {
+  return Astro.redirect('/diary/', 404);
+}
+
+const { Content, headings } = await render(diary);
+
+// Generate SEO data
+const seoData = generateSimpleSEO({
+  title: diary.data.title,
+  description: diary.data.description || '',
+  url: Astro.url.href,
+});
+
+const showTOC = !diary.data.hideTOC && headings.length > 0;
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="py-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
+      <article class="bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm">
+        <div class="p-6">
+          <!-- Header -->
+          <header class="mb-6">
+            <div class="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 mb-2">
+              <a href="/diary/" class="hover:text-highlight-600 dark:hover:text-highlight-400">
+                ← 返回日志
+              </a>
+              {diary.data.lastModified && (
+                <>
+                  <span>·</span>
+                  <time datetime={new Date(diary.data.lastModified).toISOString()}>
+                    {new Date(diary.data.lastModified).toLocaleDateString('zh-CN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </time>
+                </>
+              )}
+            </div>
+            <h1 class="text-2xl font-bold text-primary-900 dark:text-primary-50">
+              {diary.data.title}
+            </h1>
+            {diary.data.description && (
+              <p class="mt-2 text-primary-600 dark:text-primary-300">
+                {diary.data.description}
+              </p>
+            )}
+          </header>
+
+          <!-- Content -->
+          <div class="prose dark:prose-dark max-w-none">
+            <Content />
+          </div>
+        </div>
+      </article>
+
+      <!-- TOC -->
+      {showTOC && (
+        <div class="hidden xl:block fixed right-8 top-24 w-64">
+          <TableOfContents headings={headings} />
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

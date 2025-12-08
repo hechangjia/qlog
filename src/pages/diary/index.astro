@@ -1,0 +1,96 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import { siteConfig } from '@/config';
+import { generatePostsListSEO } from '@/utils/seo';
+import { shouldShowContent, isValidDate } from '@/utils/markdown';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+
+// Get all diary entries
+const allDiaries = await getCollection('diary');
+const isDev = import.meta.env.DEV;
+
+// Filter visible entries
+const visibleDiaries = allDiaries.filter(entry => shouldShowContent(entry, isDev));
+
+// Sort by date or title (date format title like "2025-12-08")
+const sortedDiaries = visibleDiaries.sort((a, b) => {
+  // Try to parse title as date first
+  const dateA = new Date(a.data.title || a.id);
+  const dateB = new Date(b.data.title || b.id);
+
+  if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+    return dateB.getTime() - dateA.getTime();
+  }
+
+  // Fallback to lastModified or alphabetical
+  const modA = a.data.lastModified ? new Date(a.data.lastModified).getTime() : 0;
+  const modB = b.data.lastModified ? new Date(b.data.lastModified).getTime() : 0;
+  return modB - modA;
+});
+
+// Generate SEO data
+const seoData = generatePostsListSEO(import.meta.env.SITE || '', undefined);
+seoData.title = `日志 | ${siteConfig.title}`;
+seoData.description = `我的日常记录`;
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="py-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
+      <!-- Page header -->
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold text-primary-900 dark:text-primary-50 mb-2">
+          日志
+        </h1>
+        <p class="text-primary-600 dark:text-primary-400">
+          日常记录和随笔
+        </p>
+      </header>
+
+      <!-- Diary list -->
+      {sortedDiaries.length > 0 ? (
+        <div class="space-y-4">
+          {sortedDiaries.map((entry) => (
+            <a
+              href={`/diary/${entry.id}`}
+              class="diary-card block p-4 rounded-lg bg-primary-50 dark:bg-primary-800/50 border border-primary-200 dark:border-primary-700 hover:border-highlight-400 dark:hover:border-highlight-500 transition-colors"
+            >
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium text-primary-900 dark:text-primary-50">
+                  {entry.data.title}
+                </h2>
+                {entry.data.lastModified && (
+                  <span class="text-sm text-primary-500 dark:text-primary-400">
+                    {new Date(entry.data.lastModified).toLocaleDateString('zh-CN')}
+                  </span>
+                )}
+              </div>
+              {entry.data.description && (
+                <p class="mt-2 text-sm text-primary-600 dark:text-primary-300 line-clamp-2">
+                  {entry.data.description}
+                </p>
+              )}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <Icon name="book-open" class="w-12 h-12 text-primary-300 dark:text-primary-600 mx-auto mb-4" />
+          <h3 class="text-lg font-medium text-primary-900 dark:text-primary-50 mb-2">
+            暂无日志
+          </h3>
+          <p class="text-primary-600 dark:text-primary-300">
+            开始记录你的日常吧！
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .diary-card:hover h2 {
+    @apply text-highlight-600 dark:text-highlight-400;
+  }
+</style>

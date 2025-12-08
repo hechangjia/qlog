@@ -255,6 +255,51 @@ export function generateDocumentationSEO(
   };
 }
 
+// Generate simple SEO data (for custom pages without full Page object)
+export function generateSimpleSEO(options: {
+  title: string;
+  description?: string;
+  url: string;
+  image?: string;
+  imageAlt?: string;
+  noIndex?: boolean;
+}): SEOData {
+  const { title, description, url, image, imageAlt, noIndex } = options;
+
+  let ogImage: OpenGraphImage;
+
+  if (image) {
+    const imagePath = extractImagePath(image);
+    let imageUrl: string;
+    if (imagePath.startsWith("http")) {
+      imageUrl = imagePath;
+    } else {
+      imageUrl = `${siteConfig.site}${imagePath.startsWith("/") ? imagePath : `/${imagePath}`}`;
+    }
+    ogImage = {
+      url: imageUrl,
+      alt: imageAlt || `Featured image for: ${title}`,
+      width: 1200,
+      height: 630,
+    };
+  } else {
+    ogImage = getDefaultOGImage();
+    ogImage = {
+      ...ogImage,
+      url: `${siteConfig.site}${ogImage.url}`,
+    };
+  }
+
+  return {
+    title: `${title} | ${siteConfig.title}`,
+    description: description || "",
+    canonical: url,
+    ogImage,
+    ogType: "website",
+    noIndex: noIndex || false,
+  };
+}
+
 // Generate SEO data for homepage
 export function generateHomeSEO(url: string): SEOData {
   let ogImage: OpenGraphImage | undefined;

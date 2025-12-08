@@ -1,0 +1,123 @@
+{
+  "weekly": {
+    "period": "2025-W50",
+    "startDate": "2025-12-08",
+    "endDate": "2025-12-14",
+    "postCount": 0,
+    "posts": []
+  },
+  "monthly": {
+    "period": "2025-12",
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "postCount": 1,
+    "posts": [
+      {
+        "id": "zootopia",
+        "title": "糊涂蛋-🐰朱迪-🦊尼克",
+        "date": "2025-12-03",
+        "description": "🦊❤️LOVE YOU PARTNER❤️🐰",
+        "tags": [
+          "Zootopia",
+          "Z-image",
+          "GPT-SoVITS",
+          "NanoBanana"
+        ],
+        "wordCount": 64
+      }
+    ]
+  },
+  "yearly": {
+    "period": "2025",
+    "startDate": "2025-01-01",
+    "endDate": "2025-12-31",
+    "postCount": 6,
+    "posts": [
+      {
+        "id": "zootopia",
+        "title": "糊涂蛋-🐰朱迪-🦊尼克",
+        "date": "2025-12-03",
+        "description": "🦊❤️LOVE YOU PARTNER❤️🐰",
+        "tags": [
+          "Zootopia",
+          "Z-image",
+          "GPT-SoVITS",
+          "NanoBanana"
+        ],
+        "wordCount": 64
+      },
+      {
+        "id": "vault-cms-guide",
+        "title": "Vault CMS Guide",
+        "date": "2025-09-10",
+        "description": "How to use this Obsidian vault as a content management system.",
+        "tags": [
+          "tutorial",
+          "setup",
+          "configuration",
+          "astro",
+          "obsidian"
+        ],
+        "wordCount": 2443
+      },
+      {
+        "id": "obsidian-embeds-demo",
+        "title": "Obsidian Embeds Demo",
+        "date": "2025-09-09",
+        "description": "Demonstration of Obsidian-style embeds.",
+        "tags": [
+          "obsidian",
+          "tutorial",
+          "formatting"
+        ],
+        "wordCount": 1263
+      },
+      {
+        "id": "sample-folder-based-post",
+        "title": "Sample Folder-Based Post",
+        "date": "2025-09-08",
+        "description": "This is a test post to demonstrate the folder-based approach",
+        "tags": [
+          "astro",
+          "folder-based"
+        ],
+        "wordCount": 88
+      },
+      {
+        "id": "formatting-reference",
+        "title": "Formatting Reference",
+        "date": "2025-09-07",
+        "description": "Explore all the markdown, extended markdown, and other embed features available in this blog theme.",
+        "tags": [
+          "markdown",
+          "formatting",
+          "tutorial",
+          "reference",
+          "meta",
+          "blog"
+        ],
+        "wordCount": 1367
+      },
+      {
+        "id": "getting-started",
+        "title": "Getting Started",
+        "date": "2025-09-06",
+        "description": "Quick start guide for Astro Modular - get your blog running in minutes.",
+        "tags": [
+          "tutorial",
+          "setup",
+          "quick-start",
+          "astro",
+          "blog"
+        ],
+        "wordCount": 509
+      }
+    ]
+  },
+  "allTime": {
+    "totalPosts": 6,
+    "firstPostDate": "2025-09-06",
+    "lastPostDate": "2025-12-03"
+  },
+  "generatedAt": "2025-12-08T13:23:56.800Z"
+}

@@ -166,6 +166,29 @@ export interface SiteConfig {
     // diary: boolean;
     // todo: boolean;
   };
+
+  // Stats Features - 统计功能配置
+  statsFeatures: {
+    // 日历热力图
+    heatmap: {
+      enabled: boolean;
+      showInSidebar: boolean;
+    };
+    // AI 总结
+    aiSummary: {
+      enabled: boolean;
+      provider: "openai" | "claude" | "none";
+      apiKey: string;
+      apiBaseUrl?: string; // 可选的自定义 API 地址
+      model?: string; // 可选的模型名称
+      autoGenerate: boolean;
+      summaryTypes: {
+        weekly: boolean;
+        monthly: boolean;
+        yearly: boolean;
+      };
+    };
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -291,7 +314,7 @@ export const siteConfig: SiteConfig = {
     // [CONFIG:PROFILE_PICTURE_IMAGE]
     image: "/profile.jpg", // Path to your profile image (place in public/ directory)
     // [CONFIG:PROFILE_PICTURE_ALT]
-    alt: "Profile picture",
+    alt: "小镇错题嘉",
     // [CONFIG:PROFILE_PICTURE_SIZE]
     size: "lg", // "sm" (32px), "md" (48px), or "lg" (64px) - only affects footer placement
     // [CONFIG:PROFILE_PICTURE_URL]
@@ -315,10 +338,10 @@ export const siteConfig: SiteConfig = {
       { title: "文章", url: "/posts/" },
       { title: "日志", url: "/diary/" },
       { title: "ToDo", url: "/todo/" },
+      { title: "统计", url: "/statistic/" },
       { title: "项目", url: "/projects/" },
       { title: "文档", url: "/docs/" },
       { title: "关于", url: "/about/" },
-      { title: "GitHub", url: "https://github.com/hechang/qlogjia" },
     ],
     // [CONFIG:NAVIGATION_SOCIAL]
     social: [
@@ -326,6 +349,11 @@ export const siteConfig: SiteConfig = {
         title: "GitHub",
         url: "https://github.com/hechangjia",
         icon: "github",
+      },
+      {
+        title: "Bilibili",
+        url: "https://space.bilibili.com/3494374983862361?spm_id_from=333.1007.0.0",
+        icon: "bilibili",
       },
     ],
   },
@@ -336,6 +364,40 @@ export const siteConfig: SiteConfig = {
     projects: true, // Enable projects section
     // [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]
     docs: true, // Enable documentation section
+  },
+
+  // Stats Features - 统计功能配置
+  statsFeatures: {
+    // 日历热力图 - 类似 GitHub 贡献图
+    heatmap: {
+      // [CONFIG:STATS_HEATMAP_ENABLED]
+      enabled: true, // 是否启用热力图
+      // [CONFIG:STATS_HEATMAP_SHOW_IN_SIDEBAR]
+      showInSidebar: true, // 在首页侧边栏显示
+    },
+    // AI 智能总结
+    aiSummary: {
+      // [CONFIG:STATS_AI_SUMMARY_ENABLED]
+      enabled: false, // 是否启用 AI 总结（需要配置 API key）
+      // [CONFIG:STATS_AI_SUMMARY_PROVIDER]
+      provider: "none", // "openai" | "claude" | "none"
+      // [CONFIG:STATS_AI_SUMMARY_API_KEY]
+      apiKey: "", // 你的 API key（建议使用环境变量）
+      // [CONFIG:STATS_AI_SUMMARY_API_BASE_URL]
+      apiBaseUrl: "", // 可选：自定义 API 地址（用于代理或自托管）
+      // [CONFIG:STATS_AI_SUMMARY_MODEL]
+      model: "", // 可选：指定模型（如 "gpt-4o-mini" 或 "claude-3-haiku-20240307"）
+      // [CONFIG:STATS_AI_SUMMARY_AUTO_GENERATE]
+      autoGenerate: false, // 构建时自动生成总结
+      summaryTypes: {
+        // [CONFIG:STATS_AI_SUMMARY_WEEKLY]
+        weekly: true, // 周总结
+        // [CONFIG:STATS_AI_SUMMARY_MONTHLY]
+        monthly: true, // 月总结
+        // [CONFIG:STATS_AI_SUMMARY_YEARLY]
+        yearly: true, // 年度总结
+      },
+    },
   },
 
   // Home Options
@@ -368,7 +430,7 @@ export const siteConfig: SiteConfig = {
     },
     blurb: {
       // [CONFIG:HOME_OPTIONS_BLURB_PLACEMENT]
-      placement: "below", // 'above' (at the top), 'below' (after content), or 'none' (disabled)
+      placement: "above", // 'above' (at the top), 'below' (after content), or 'none' (disabled)
     },
   },
 

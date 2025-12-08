@@ -1,0 +1,173 @@
+---
+/**
+ * Statistics Page - 统计页面
+ * 包含日历热力图和 AI 总结功能
+ */
+import { siteConfig } from '@/config';
+import { generateSimpleSEO } from '@/utils/seo';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ActivityHeatmap from '@/components/ActivityHeatmap.astro';
+import AISummary from '@/components/AISummary.astro';
+
+// Generate SEO data
+const seoData = generateSimpleSEO({
+  title: '统计',
+  description: '博客写作统计和 AI 总结',
+  url: Astro.url.href,
+});
+
+// Check feature flags
+const showHeatmap = siteConfig.statsFeatures?.heatmap?.enabled ?? true;
+const showAISummary = siteConfig.statsFeatures?.aiSummary?.enabled ?? false;
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="py-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
+      <!-- Page Header -->
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold text-primary-900 dark:text-primary-50 mb-2">
+          统计
+        </h1>
+        <p class="text-primary-600 dark:text-primary-400">
+          写作活动统计和 AI 智能总结
+        </p>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <!-- Activity Heatmap -->
+        {showHeatmap && (
+          <section class="stats-section">
+            <ActivityHeatmap />
+          </section>
+        )}
+
+        <!-- AI Summary -->
+        {showAISummary && (
+          <section class="stats-section">
+            <AISummary />
+          </section>
+        )}
+
+        <!-- Empty State -->
+        {!showHeatmap && !showAISummary && (
+          <div class="empty-state">
+            <p class="text-primary-500 dark:text-primary-400">
+              暂无可用的统计功能。请在配置中启用热力图或 AI 总结。
+            </p>
+          </div>
+        )}
+      </div>
+
+      <!-- Quick Stats Summary (from summary data) -->
+      <section class="quick-stats mt-8" id="quick-stats">
+        <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
+          快速统计
+        </h2>
+        <div class="stats-cards" id="stats-cards">
+          <div class="stat-card">
+            <span class="stat-value" id="stat-total">--</span>
+            <span class="stat-label">总文章数</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-week">--</span>
+            <span class="stat-label">本周发布</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-month">--</span>
+            <span class="stat-label">本月发布</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-year">--</span>
+            <span class="stat-label">今年发布</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  interface SummaryData {
+    weekly: { postCount: number };
+    monthly: { postCount: number };
+    yearly: { postCount: number };
+    allTime: { totalPosts: number };
+  }
+
+  async function loadQuickStats() {
+    try {
+      const response = await fetch('/stats/summary-data.json');
+      if (!response.ok) return;
+
+      const data: SummaryData = await response.json();
+
+      const totalEl = document.getElementById('stat-total');
+      const weekEl = document.getElementById('stat-week');
+      const monthEl = document.getElementById('stat-month');
+      const yearEl = document.getElementById('stat-year');
+
+      if (totalEl) totalEl.textContent = String(data.allTime?.totalPosts ?? 0);
+      if (weekEl) weekEl.textContent = String(data.weekly?.postCount ?? 0);
+      if (monthEl) monthEl.textContent = String(data.monthly?.postCount ?? 0);
+      if (yearEl) yearEl.textContent = String(data.yearly?.postCount ?? 0);
+    } catch (error) {
+      console.warn('Failed to load quick stats:', error);
+    }
+  }
+
+  // Initialize
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadQuickStats);
+  } else {
+    loadQuickStats();
+  }
+
+  // Swup support
+  if (typeof window !== 'undefined' && (window as any).swup) {
+    (window as any).swup.hooks.on('page:view', loadQuickStats);
+  }
+</script>
+
+<style>
+  .stats-grid {
+    @apply space-y-6;
+  }
+
+  .stats-section {
+    @apply w-full;
+  }
+
+  .empty-state {
+    @apply text-center py-12;
+    @apply bg-primary-50 dark:bg-primary-800/50;
+    @apply rounded-lg border border-primary-200 dark:border-primary-700;
+  }
+
+  .quick-stats {
+    @apply p-6 rounded-lg;
+    @apply bg-primary-50 dark:bg-primary-800/50;
+    @apply border border-primary-200 dark:border-primary-700;
+  }
+
+  .stats-cards {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+  }
+
+  .stat-card {
+    @apply flex flex-col items-center p-4 rounded-lg;
+    @apply bg-white dark:bg-primary-800;
+    @apply border border-primary-200 dark:border-primary-700;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold;
+    @apply text-highlight-600 dark:text-highlight-400;
+  }
+
+  .stat-label {
+    @apply text-xs mt-1;
+    @apply text-primary-500 dark:text-primary-400;
+  }
+</style>

@@ -135,6 +135,68 @@ const specialCollection = defineCollection({
   }),
 });
 
+// Define schema for diary entries
+const diaryCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/diary' }),
+  schema: z.object({
+    title: z.union([z.string(), z.coerce.date()]).transform((val) => {
+      // Convert date to string if needed
+      if (val instanceof Date) {
+        return val.toISOString().split('T')[0];
+      }
+      return String(val);
+    }).default('Untitled Diary'),
+    description: z.string().nullable().optional().default(''),
+    date: z.coerce.date().optional(),
+    lastModified: z.coerce.date().optional(),
+    category: z.string().nullable().optional(),
+    order: z.number().default(0),
+    image: z.any().nullable().optional().transform((val) => {
+      if (Array.isArray(val)) {
+        return val[0] || null;
+      }
+      if (typeof val === 'string') {
+        return val;
+      }
+      return null;
+    }),
+    imageAlt: z.string().nullable().optional(),
+    hideCoverImage: z.boolean().optional(),
+    hideTOC: z.boolean().optional(),
+    draft: z.boolean().optional(),
+    noIndex: z.boolean().optional(),
+    featured: z.boolean().optional(),
+  }),
+});
+
+// Define schema for todo items
+const todoCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/todo' }),
+  schema: z.object({
+    title: z.string().default('Untitled Todo'),
+    description: z.string().nullable().optional().default(''),
+    lastModified: z.coerce.date().optional(),
+    category: z.string().nullable().optional(),
+    order: z.number().default(0),
+    image: z.any().nullable().optional().transform((val) => {
+      if (Array.isArray(val)) {
+        return val[0] || null;
+      }
+      if (typeof val === 'string') {
+        return val;
+      }
+      return null;
+    }),
+    imageAlt: z.string().nullable().optional(),
+    hideCoverImage: z.boolean().optional(),
+    hideTOC: z.boolean().optional(),
+    draft: z.boolean().optional(),
+    noIndex: z.boolean().optional(),
+    featured: z.boolean().optional(),
+    aliases: z.array(z.string()).nullable().optional(),
+  }),
+});
+
 // Export collections
 export const collections = {
   posts: postsCollection,
@@ -142,5 +204,7 @@ export const collections = {
   projects: projectsCollection,
   docs: docsCollection,
   special: specialCollection,
+  diary: diaryCollection,
+  todo: todoCollection,
 };
 

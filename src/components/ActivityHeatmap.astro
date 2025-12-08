@@ -1,0 +1,394 @@
+---
+/**
+ * ActivityHeatmap - GitHub 风格的日历热力图组件
+ * 显示过去一年的文章发布活动
+ */
+import { siteConfig } from "@/config";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+// 检查是否启用
+const isEnabled = siteConfig.statsFeatures?.heatmap?.enabled ?? true;
+---
+
+{isEnabled && (
+  <div class:list={["activity-heatmap", className]} id="activity-heatmap">
+    <div class="heatmap-header">
+      <h3 class="heatmap-title">发布活动</h3>
+      <span class="heatmap-total" id="heatmap-total">0 篇文章</span>
+    </div>
+
+    <div class="heatmap-container">
+      <svg id="heatmap-svg" class="heatmap-svg"></svg>
+    </div>
+
+    <div class="heatmap-legend">
+      <span class="legend-label">少</span>
+      <div class="legend-boxes">
+        <div class="legend-box level-0" title="0 篇"></div>
+        <div class="legend-box level-1" title="1 篇"></div>
+        <div class="legend-box level-2" title="2-3 篇"></div>
+        <div class="legend-box level-3" title="4-5 篇"></div>
+        <div class="legend-box level-4" title="6+ 篇"></div>
+      </div>
+      <span class="legend-label">多</span>
+    </div>
+
+    <div class="heatmap-tooltip" id="heatmap-tooltip"></div>
+  </div>
+)}
+
+<script>
+  interface HeatmapData {
+    data: Record<string, number>;
+    totalPosts: number;
+    generatedAt: string;
+  }
+
+  // 获取主题颜色
+  function getHeatmapColors(): { levels: string[]; border: string; text: string; background: string } {
+    const root = document.documentElement;
+    const computedStyle = getComputedStyle(root);
+    const isDarkMode = root.classList.contains('dark');
+
+    const getCSSVar = (varName: string, fallback: string): string => {
+      const value = computedStyle.getPropertyValue(varName).trim();
+      if (!value) return fallback;
+
+      if (value.includes(' ')) {
+        const rgbValues = value.split(' ').map(v => parseInt(v.trim()));
+        if (rgbValues.length === 3 && rgbValues.every(v => !isNaN(v))) {
+          const hex = rgbValues.map(v => v.toString(16).padStart(2, '0')).join('');
+          return `#${hex}`;
+        }
+      }
+
+      return value;
+    };
+
+    if (isDarkMode) {
+      return {
+        levels: [
+          getCSSVar('--color-primary-800', '#1e293b'),
+          getCSSVar('--color-highlight-900', '#1e3a5f'),
+          getCSSVar('--color-highlight-700', '#0369a1'),
+          getCSSVar('--color-highlight-500', '#0ea5e9'),
+          getCSSVar('--color-highlight-400', '#38bdf8'),
+        ],
+        border: getCSSVar('--color-primary-700', '#334155'),
+        text: getCSSVar('--color-primary-300', '#cbd5e1'),
+        background: getCSSVar('--color-primary-900', '#0f172a'),
+      };
+    } else {
+      return {
+        levels: [
+          getCSSVar('--color-primary-100', '#f1f5f9'),
+          getCSSVar('--color-highlight-200', '#bae6fd'),
+          getCSSVar('--color-highlight-400', '#38bdf8'),
+          getCSSVar('--color-highlight-500', '#0ea5e9'),
+          getCSSVar('--color-highlight-600', '#0284c7'),
+        ],
+        border: getCSSVar('--color-primary-200', '#e2e8f0'),
+        text: getCSSVar('--color-primary-600', '#475569'),
+        background: getCSSVar('--color-primary-50', '#f8fafc'),
+      };
+    }
+  }
+
+  // 获取颜色等级
+  function getColorLevel(count: number): number {
+    if (count === 0) return 0;
+    if (count === 1) return 1;
+    if (count <= 3) return 2;
+    if (count <= 5) return 3;
+    return 4;
+  }
+
+  // 格式化日期
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // 格式化显示日期
+  function formatDisplayDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short'
+    };
+    return date.toLocaleDateString('zh-CN', options);
+  }
+
+  // 渲染热力图
+  async function renderHeatmap() {
+    const svg = document.getElementById('heatmap-svg') as SVGSVGElement | null;
+    const totalSpan = document.getElementById('heatmap-total');
+    const tooltip = document.getElementById('heatmap-tooltip');
+
+    if (!svg) return;
+
+    // 获取数据
+    let heatmapData: HeatmapData;
+    try {
+      const response = await fetch('/stats/heatmap-data.json');
+      if (!response.ok) {
+        throw new Error('Failed to load heatmap data');
+      }
+      heatmapData = await response.json();
+    } catch (error) {
+      console.warn('Heatmap data not available:', error);
+      // 使用空数据
+      heatmapData = { data: {}, totalPosts: 0, generatedAt: new Date().toISOString() };
+    }
+
+    // 更新总数
+    if (totalSpan) {
+      totalSpan.textContent = `${heatmapData.totalPosts} 篇文章`;
+    }
+
+    // 获取颜色
+    const colors = getHeatmapColors();
+
+    // 配置
+    const cellSize = 11;
+    const cellGap = 3;
+    const weeks = 53;
+    const days = 7;
+    const leftPadding = 25; // 留出星期标签的空间
+    const topPadding = 15; // 留出月份标签的空间
+
+    // 设置 SVG 尺寸
+    const svgWidth = leftPadding + weeks * (cellSize + cellGap);
+    const svgHeight = topPadding + days * (cellSize + cellGap);
+    svg.setAttribute('width', String(svgWidth));
+    svg.setAttribute('height', String(svgHeight));
+    svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+
+    // 清空 SVG
+    svg.innerHTML = '';
+
+    // 计算日期范围（过去一年）
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 364);
+
+    // 调整到周日开始
+    while (startDate.getDay() !== 0) {
+      startDate.setDate(startDate.getDate() - 1);
+    }
+
+    // 添加星期标签
+    const dayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+    [1, 3, 5].forEach(dayIndex => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', '0');
+      text.setAttribute('y', String(topPadding + dayIndex * (cellSize + cellGap) + cellSize - 2));
+      text.setAttribute('fill', colors.text);
+      text.setAttribute('font-size', '9');
+      text.setAttribute('font-family', 'inherit');
+      text.textContent = dayLabels[dayIndex];
+      svg.appendChild(text);
+    });
+
+    // 添加月份标签
+    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    let lastMonth = -1;
+
+    // 绘制方格
+    const currentDate = new Date(startDate);
+    for (let week = 0; week < weeks; week++) {
+      for (let day = 0; day < days; day++) {
+        if (currentDate > today) break;
+
+        const dateStr = formatDate(currentDate);
+        const count = heatmapData.data[dateStr] || 0;
+        const level = getColorLevel(count);
+
+        const x = leftPadding + week * (cellSize + cellGap);
+        const y = topPadding + day * (cellSize + cellGap);
+
+        // 添加月份标签（每月第一周）
+        if (currentDate.getMonth() !== lastMonth && day === 0) {
+          lastMonth = currentDate.getMonth();
+          const monthText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          monthText.setAttribute('x', String(x));
+          monthText.setAttribute('y', '10');
+          monthText.setAttribute('fill', colors.text);
+          monthText.setAttribute('font-size', '9');
+          monthText.setAttribute('font-family', 'inherit');
+          monthText.textContent = monthNames[currentDate.getMonth()];
+          svg.appendChild(monthText);
+        }
+
+        // 创建方格
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', String(x));
+        rect.setAttribute('y', String(y));
+        rect.setAttribute('width', String(cellSize));
+        rect.setAttribute('height', String(cellSize));
+        rect.setAttribute('rx', '2');
+        rect.setAttribute('fill', colors.levels[level]);
+        rect.setAttribute('stroke', colors.border);
+        rect.setAttribute('stroke-width', '0.5');
+        rect.setAttribute('data-date', dateStr);
+        rect.setAttribute('data-count', String(count));
+        rect.classList.add('heatmap-cell');
+
+        // 添加悬停事件
+        rect.addEventListener('mouseenter', (e) => {
+          if (tooltip) {
+            const target = e.target as SVGRectElement;
+            const date = target.getAttribute('data-date') || '';
+            const cnt = target.getAttribute('data-count') || '0';
+            tooltip.innerHTML = `<strong>${formatDisplayDate(date)}</strong><br>${cnt} 篇文章`;
+            tooltip.style.display = 'block';
+
+            const rectBounds = target.getBoundingClientRect();
+            const containerBounds = svg.parentElement?.getBoundingClientRect();
+            if (containerBounds) {
+              tooltip.style.left = `${rectBounds.left - containerBounds.left + cellSize / 2}px`;
+              tooltip.style.top = `${rectBounds.top - containerBounds.top - 40}px`;
+            }
+          }
+        });
+
+        rect.addEventListener('mouseleave', () => {
+          if (tooltip) {
+            tooltip.style.display = 'none';
+          }
+        });
+
+        svg.appendChild(rect);
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+
+    // 更新图例颜色
+    updateLegendColors(colors);
+  }
+
+  // 更新图例颜色
+  function updateLegendColors(colors: ReturnType<typeof getHeatmapColors>) {
+    const legendBoxes = document.querySelectorAll('.legend-box');
+    legendBoxes.forEach((box, index) => {
+      (box as HTMLElement).style.backgroundColor = colors.levels[index];
+      (box as HTMLElement).style.borderColor = colors.border;
+    });
+  }
+
+  // 初始化
+  function initHeatmap() {
+    renderHeatmap();
+  }
+
+  // DOM Ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHeatmap);
+  } else {
+    initHeatmap();
+  }
+
+  // Swup 页面切换支持
+  if (typeof window !== 'undefined' && (window as any).swup) {
+    (window as any).swup.hooks.on('page:view', initHeatmap);
+  }
+
+  // 主题变更监听
+  window.addEventListener('themechange', () => {
+    renderHeatmap();
+  });
+
+  // 监听 dark mode 变化
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        renderHeatmap();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
+</script>
+
+<style>
+  .activity-heatmap {
+    @apply p-4 rounded-lg;
+    @apply bg-primary-50 dark:bg-primary-800/50;
+    @apply border border-primary-200 dark:border-primary-700;
+  }
+
+  .heatmap-header {
+    @apply flex items-center justify-between mb-3;
+  }
+
+  .heatmap-title {
+    @apply text-sm font-medium;
+    @apply text-primary-700 dark:text-primary-200;
+    margin: 0;
+  }
+
+  .heatmap-total {
+    @apply text-xs;
+    @apply text-primary-500 dark:text-primary-400;
+  }
+
+  .heatmap-container {
+    @apply overflow-x-auto pb-2;
+    position: relative;
+  }
+
+  .heatmap-svg {
+    display: block;
+  }
+
+  .heatmap-cell {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .heatmap-cell:hover {
+    opacity: 0.8;
+  }
+
+  .heatmap-legend {
+    @apply flex items-center justify-end gap-1 mt-2;
+  }
+
+  .legend-label {
+    @apply text-xs;
+    @apply text-primary-500 dark:text-primary-400;
+  }
+
+  .legend-boxes {
+    @apply flex gap-0.5;
+  }
+
+  .legend-box {
+    @apply w-2.5 h-2.5 rounded-sm;
+    @apply border border-primary-200 dark:border-primary-700;
+  }
+
+  .heatmap-tooltip {
+    @apply absolute z-50 px-2 py-1 rounded text-xs;
+    @apply bg-primary-900 dark:bg-primary-100;
+    @apply text-primary-100 dark:text-primary-900;
+    @apply shadow-lg;
+    display: none;
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+</style>

@@ -54,3 +54,9 @@ public/_headers
 
 # Netlify Log
 *.log
+
+.claude
+
+CLAUDE.md
+
+nul

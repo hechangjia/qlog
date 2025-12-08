@@ -1,0 +1,92 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import { siteConfig } from '@/config';
+import { generatePostsListSEO } from '@/utils/seo';
+import { shouldShowContent } from '@/utils/markdown';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+
+// Get all todo entries
+const allTodos = await getCollection('todo');
+const isDev = import.meta.env.DEV;
+
+// Filter visible entries
+const visibleTodos = allTodos.filter(entry => shouldShowContent(entry, isDev));
+
+// Sort by order or lastModified
+const sortedTodos = visibleTodos.sort((a, b) => {
+  // Sort by order first
+  if (a.data.order !== b.data.order) {
+    return a.data.order - b.data.order;
+  }
+  // Then by lastModified
+  const modA = a.data.lastModified ? new Date(a.data.lastModified).getTime() : 0;
+  const modB = b.data.lastModified ? new Date(b.data.lastModified).getTime() : 0;
+  return modB - modA;
+});
+
+// Generate SEO data
+const seoData = generatePostsListSEO(import.meta.env.SITE || '', undefined);
+seoData.title = `待办事项 | ${siteConfig.title}`;
+seoData.description = `我的待办事项列表`;
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="py-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
+      <!-- Page header -->
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold text-primary-900 dark:text-primary-50 mb-2">
+          待办事项
+        </h1>
+        <p class="text-primary-600 dark:text-primary-400">
+          任务清单和计划
+        </p>
+      </header>
+
+      <!-- Todo list -->
+      {sortedTodos.length > 0 ? (
+        <div class="space-y-4">
+          {sortedTodos.map((entry) => (
+            <a
+              href={`/todo/${entry.id}`}
+              class="todo-card block p-4 rounded-lg bg-primary-50 dark:bg-primary-800/50 border border-primary-200 dark:border-primary-700 hover:border-highlight-400 dark:hover:border-highlight-500 transition-colors"
+            >
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium text-primary-900 dark:text-primary-50">
+                  {entry.data.title}
+                </h2>
+                {entry.data.lastModified && (
+                  <span class="text-sm text-primary-500 dark:text-primary-400">
+                    {new Date(entry.data.lastModified).toLocaleDateString('zh-CN')}
+                  </span>
+                )}
+              </div>
+              {entry.data.description && (
+                <p class="mt-2 text-sm text-primary-600 dark:text-primary-300 line-clamp-2">
+                  {entry.data.description}
+                </p>
+              )}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <Icon name="check-square" class="w-12 h-12 text-primary-300 dark:text-primary-600 mx-auto mb-4" />
+          <h3 class="text-lg font-medium text-primary-900 dark:text-primary-50 mb-2">
+            暂无待办事项
+          </h3>
+          <p class="text-primary-600 dark:text-primary-300">
+            太棒了，所有任务都完成了！
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .todo-card:hover h2 {
+    @apply text-highlight-600 dark:text-highlight-400;
+  }
+</style>
