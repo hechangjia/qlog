@@ -31,7 +31,7 @@
     "period": "2025",
     "startDate": "2025-01-01",
     "endDate": "2025-12-31",
-    "postCount": 6,
+    "postCount": 5,
     "posts": [
       {
         "id": "zootopia",
@@ -84,21 +84,6 @@
         "wordCount": 88
       },
       {
-        "id": "formatting-reference",
-        "title": "Formatting Reference",
-        "date": "2025-09-07",
-        "description": "Explore all the markdown, extended markdown, and other embed features available in this blog theme.",
-        "tags": [
-          "markdown",
-          "formatting",
-          "tutorial",
-          "reference",
-          "meta",
-          "blog"
-        ],
-        "wordCount": 1367
-      },
-      {
         "id": "getting-started",
         "title": "Getting Started",
         "date": "2025-09-06",
@@ -115,9 +100,9 @@
     ]
   },
   "allTime": {
-    "totalPosts": 6,
+    "totalPosts": 5,
     "firstPostDate": "2025-09-06",
     "lastPostDate": "2025-12-03"
   },
-  "generatedAt": "2025-12-08T13:23:56.800Z"
+  "generatedAt": "2025-12-08T14:31:43.992Z"
 }

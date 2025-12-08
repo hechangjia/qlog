@@ -1,0 +1,250 @@
+{
+  "years": [
+    2025
+  ],
+  "currentYear": 2025,
+  "reports": {
+    "2025": {
+      "year": 2025,
+      "generatedAt": "2025-12-08T14:31:44.059Z",
+      "overview": {
+        "totalPosts": 5,
+        "totalWords": 542,
+        "avgWordsPerPost": 108,
+        "uniqueDays": 5,
+        "longestStreak": 3
+      },
+      "highlights": {
+        "firstPost": {
+          "title": "Getting Started",
+          "date": "2025-09-06",
+          "id": "getting-started"
+        },
+        "lastPost": {
+          "title": "糊涂蛋-🐰朱迪-🦊尼克",
+          "date": "2025-12-03",
+          "id": "zootopia"
+        },
+        "longestPost": {
+          "title": "Vault CMS Guide",
+          "words": 316,
+          "id": "vault-cms-guide"
+        },
+        "mostProductiveMonth": {
+          "month": 8,
+          "monthName": "九月",
+          "count": 4
+        },
+        "favoriteWritingDay": {
+          "day": 3,
+          "dayName": "周三",
+          "count": 2
+        }
+      },
+      "tags": {
+        "totalUnique": 13,
+        "topTags": [
+          {
+            "tag": "tutorial",
+            "count": 3
+          },
+          {
+            "tag": "astro",
+            "count": 3
+          },
+          {
+            "tag": "setup",
+            "count": 2
+          },
+          {
+            "tag": "obsidian",
+            "count": 2
+          },
+          {
+            "tag": "quick-start",
+            "count": 1
+          }
+        ]
+      },
+      "monthly": [
+        {
+          "month": 0,
+          "monthName": "一月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 1,
+          "monthName": "二月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 2,
+          "monthName": "三月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 3,
+          "monthName": "四月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 4,
+          "monthName": "五月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 5,
+          "monthName": "六月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 6,
+          "monthName": "七月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 7,
+          "monthName": "八月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 8,
+          "monthName": "九月",
+          "count": 4,
+          "words": 451
+        },
+        {
+          "month": 9,
+          "monthName": "十月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 10,
+          "monthName": "十一月",
+          "count": 0,
+          "words": 0
+        },
+        {
+          "month": 11,
+          "monthName": "十二月",
+          "count": 1,
+          "words": 91
+        }
+      ],
+      "weekly": [
+        {
+          "day": 0,
+          "dayName": "周日",
+          "count": 0
+        },
+        {
+          "day": 1,
+          "dayName": "周一",
+          "count": 1
+        },
+        {
+          "day": 2,
+          "dayName": "周二",
+          "count": 1
+        },
+        {
+          "day": 3,
+          "dayName": "周三",
+          "count": 2
+        },
+        {
+          "day": 4,
+          "dayName": "周四",
+          "count": 0
+        },
+        {
+          "day": 5,
+          "dayName": "周五",
+          "count": 0
+        },
+        {
+          "day": 6,
+          "dayName": "周六",
+          "count": 1
+        }
+      ],
+      "funFacts": {
+        "booksEquivalent": 0,
+        "pagesEquivalent": 2,
+        "avgPostsPerMonth": 0.4,
+        "wordsPerDay": 1
+      },
+      "posts": [
+        {
+          "id": "getting-started",
+          "title": "Getting Started",
+          "date": "2025-09-06",
+          "tags": [
+            "tutorial",
+            "setup",
+            "quick-start",
+            "astro",
+            "blog"
+          ],
+          "words": 68
+        },
+        {
+          "id": "sample-folder-based-post",
+          "title": "Sample Folder-Based Post",
+          "date": "2025-09-08",
+          "tags": [
+            "astro",
+            "folder-based"
+          ],
+          "words": 12
+        },
+        {
+          "id": "obsidian-embeds-demo",
+          "title": "Obsidian Embeds Demo",
+          "date": "2025-09-09",
+          "tags": [
+            "obsidian",
+            "tutorial",
+            "formatting"
+          ],
+          "words": 55
+        },
+        {
+          "id": "vault-cms-guide",
+          "title": "Vault CMS Guide",
+          "date": "2025-09-10",
+          "tags": [
+            "tutorial",
+            "setup",
+            "configuration",
+            "astro",
+            "obsidian"
+          ],
+          "words": 316
+        },
+        {
+          "id": "zootopia",
+          "title": "糊涂蛋-🐰朱迪-🦊尼克",
+          "date": "2025-12-03",
+          "tags": [
+            "Zootopia",
+            "Z-image",
+            "GPT-SoVITS",
+            "NanoBanana"
+          ],
+          "words": 91
+        }
+      ]
+    }
+  },
+  "generatedAt": "2025-12-08T14:31:44.059Z"
+}

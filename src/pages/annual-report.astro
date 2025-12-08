@@ -1,0 +1,1114 @@
+---
+/**
+ * Annual Report Page - AI 生成年度写作报告
+ * 类似网易云音乐/QQ音乐年度报告风格的沉浸式体验
+ * 使用 Gitee AI (Z-Image) 生成精美卡片
+ */
+import { siteConfig } from '@/config';
+import { generateSimpleSEO } from '@/utils/seo';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const currentYear = new Date().getFullYear();
+
+const seoData = generateSimpleSEO({
+  title: `${currentYear} 年度写作报告`,
+  description: `回顾 ${currentYear} 年的写作旅程`,
+  url: Astro.url.href,
+});
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="annual-report" id="annual-report">
+    <!-- Loading State -->
+    <div class="loading-screen" id="loading-screen">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">正在加载你的年度报告...</p>
+      </div>
+    </div>
+
+    <!-- Report Container -->
+    <div class="report-container" id="report-container" style="display: none;">
+      <!-- Year Selector -->
+      <div class="year-selector" id="year-selector">
+        <button class="year-nav-btn" id="prev-year" aria-label="上一年">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <span class="current-year" id="current-year-display">2024</span>
+        <button class="year-nav-btn" id="next-year" aria-label="下一年">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+      <!-- Slides Container -->
+      <div class="slides-wrapper" id="slides-wrapper">
+        <!-- Slides will be injected here -->
+      </div>
+
+      <!-- Navigation Dots -->
+      <div class="slide-nav" id="slide-nav"></div>
+
+      <!-- Navigation Arrows -->
+      <button class="slide-arrow slide-arrow-left" id="slide-prev" aria-label="上一页">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <button class="slide-arrow slide-arrow-right" id="slide-next" aria-label="下一页">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+
+      <!-- AI Generate Button -->
+      <button class="ai-generate-btn" id="ai-generate-btn" title="AI 生成卡片背景">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1"/>
+        </svg>
+        <span>AI 生成背景</span>
+      </button>
+
+      <!-- Swipe hint (mobile) -->
+      <div class="swipe-hint" id="swipe-hint">
+        <span>左右滑动查看</span>
+      </div>
+    </div>
+
+    <!-- No Data State -->
+    <div class="no-data" id="no-data" style="display: none;">
+      <div class="no-data-content">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <h2>暂无年度报告</h2>
+        <p>开始写作，明年再来查看你的年度报告吧！</p>
+        <a href="/posts/" class="back-link">开始写作</a>
+      </div>
+    </div>
+
+    <!-- AI Generation Modal -->
+    <div class="ai-modal" id="ai-modal" style="display: none;">
+      <div class="ai-modal-content">
+        <div class="ai-modal-header">
+          <h3>AI 生成中</h3>
+          <button class="ai-modal-close" id="ai-modal-close">&times;</button>
+        </div>
+        <div class="ai-modal-body">
+          <div class="ai-progress">
+            <div class="ai-progress-bar" id="ai-progress-bar"></div>
+          </div>
+          <p class="ai-status" id="ai-status">正在生成卡片背景...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+interface AnnualReport {
+  year: number;
+  overview: {
+    totalPosts: number;
+    totalWords: number;
+    avgWordsPerPost: number;
+    uniqueDays: number;
+    longestStreak: number;
+  };
+  highlights: {
+    firstPost: { title: string; date: string; id: string };
+    lastPost: { title: string; date: string; id: string };
+    longestPost: { title: string; words: number; id: string };
+    mostProductiveMonth: { month: number; monthName: string; count: number };
+    favoriteWritingDay: { day: number; dayName: string; count: number };
+  };
+  tags: {
+    totalUnique: number;
+    topTags: Array<{ tag: string; count: number }>;
+  };
+  monthly: Array<{ month: number; monthName: string; count: number; words: number }>;
+  weekly: Array<{ day: number; dayName: string; count: number }>;
+  funFacts: {
+    booksEquivalent: number;
+    pagesEquivalent: number;
+    avgPostsPerMonth: number;
+    wordsPerDay: number;
+  };
+  posts: Array<{ id: string; title: string; date: string; tags: string[]; words: number }>;
+}
+
+interface ReportData {
+  years: number[];
+  currentYear: number;
+  reports: Record<number, AnnualReport>;
+}
+
+interface SlideConfig {
+  type: string;
+  title: string;
+  prompt: string;
+}
+
+let reportData: ReportData | null = null;
+let currentYearIndex = 0;
+let currentSlide = 0;
+let totalSlides = 0;
+let touchStartX = 0;
+let aiImageCache: Record<string, string> = {};
+
+function formatNumber(num: number): string {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + '万';
+  }
+  return num.toLocaleString();
+}
+
+// 构建报告数据用于 API
+function buildReportDataForAPI(report: AnnualReport) {
+  return {
+    year: report.year,
+    totalPosts: report.overview.totalPosts,
+    totalWords: report.overview.totalWords,
+    topTags: report.tags.topTags.map(t => t.tag),
+    mostProductiveMonth: report.highlights.mostProductiveMonth.monthName,
+    favoriteWritingDay: report.highlights.favoriteWritingDay.dayName,
+    longestPostTitle: report.highlights.longestPost.title,
+    longestPostWords: report.highlights.longestPost.words,
+    firstPostTitle: report.highlights.firstPost.title,
+    firstPostDate: report.highlights.firstPost.date,
+  };
+}
+
+// 调用 AI 生成图片（使用 DeepSeek + Z-Image）
+async function generateAIImage(slideType: string, report: AnnualReport): Promise<string | null> {
+  const cacheKey = `${report.year}-${slideType}`;
+
+  // 检查缓存
+  if (aiImageCache[cacheKey]) {
+    return aiImageCache[cacheKey];
+  }
+
+  try {
+    const reportData = buildReportDataForAPI(report);
+
+    const response = await fetch('/api/generate-report-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slideType: slideType,
+        reportData: reportData,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('AI image generation failed:', error);
+      return null;
+    }
+
+    const result = await response.json();
+    if (result.success && result.imageUrl) {
+      aiImageCache[cacheKey] = result.imageUrl;
+      console.log(`Generated ${slideType} with ${result.promptSource} prompt`);
+      return result.imageUrl;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('AI image generation error:', error);
+    return null;
+  }
+}
+
+// 应用 AI 背景到幻灯片
+function applyAIBackground(slideIndex: number, imageUrl: string) {
+  const slideWrapper = document.querySelector(`.slide-wrapper[data-index="${slideIndex}"]`);
+  if (!slideWrapper) return;
+
+  const slide = slideWrapper.querySelector('.slide') as HTMLElement;
+  const slideBg = slideWrapper.querySelector('.slide-bg') as HTMLElement;
+
+  if (slide && slideBg) {
+    // 直接设置背景图片
+    slideBg.style.backgroundImage = `url(${imageUrl})`;
+    slide.classList.add('has-ai-bg');
+    console.log(`Applied AI background to slide ${slideIndex}`);
+  }
+}
+
+// 生成幻灯片
+function generateSlides(report: AnnualReport): string {
+  const slides: string[] = [];
+
+  // Slide 1: Welcome
+  slides.push(`
+    <div class="slide slide-welcome" data-slide-type="welcome">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <div class="welcome-year">${report.year}</div>
+        <h1 class="welcome-title">年度写作报告</h1>
+        <p class="welcome-subtitle">回顾这一年的文字旅程</p>
+        <div class="welcome-decoration">
+          <span class="decoration-line"></span>
+          <span class="decoration-dot"></span>
+          <span class="decoration-line"></span>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Slide 2: Overview
+  slides.push(`
+    <div class="slide slide-overview" data-slide-type="overview">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <h2 class="slide-title">这一年</h2>
+        <div class="stat-highlight">
+          <span class="stat-number">${report.overview.totalPosts}</span>
+          <span class="stat-label">篇文章</span>
+        </div>
+        <div class="stat-secondary">
+          <div class="stat-item">
+            <span class="stat-value">${formatNumber(report.overview.totalWords)}</span>
+            <span class="stat-desc">字</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">${report.overview.uniqueDays}</span>
+            <span class="stat-desc">天</span>
+          </div>
+        </div>
+        <p class="stat-comment">平均每篇 ${formatNumber(report.overview.avgWordsPerPost)} 字</p>
+      </div>
+    </div>
+  `);
+
+  // Slide 3: First Post
+  slides.push(`
+    <div class="slide slide-first-post" data-slide-type="firstPost">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <div class="milestone-badge">🎯 起点</div>
+        <h2 class="slide-title">第一篇文章</h2>
+        <div class="post-card">
+          <span class="post-date">${report.highlights.firstPost.date}</span>
+          <h3 class="post-title">${report.highlights.firstPost.title}</h3>
+        </div>
+        <p class="milestone-text">这是你 ${report.year} 年写作旅程的开始</p>
+      </div>
+    </div>
+  `);
+
+  // Slide 4: Most Productive Month
+  slides.push(`
+    <div class="slide slide-productive" data-slide-type="productive">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <div class="milestone-badge">🔥 高产</div>
+        <h2 class="slide-title">最高产的月份</h2>
+        <div class="month-highlight">
+          <span class="month-name">${report.highlights.mostProductiveMonth.monthName}</span>
+        </div>
+        <div class="month-stat">
+          发布了 <strong>${report.highlights.mostProductiveMonth.count}</strong> 篇文章
+        </div>
+        <div class="month-chart">
+          ${report.monthly.map(m => `
+            <div class="month-bar ${m.month === report.highlights.mostProductiveMonth.month ? 'active' : ''}"
+                 style="height: ${Math.max(4, (m.count / Math.max(...report.monthly.map(x => x.count), 1)) * 100)}%"
+                 title="${m.monthName}: ${m.count}篇">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Slide 5: Writing Habit
+  slides.push(`
+    <div class="slide slide-habit" data-slide-type="habit">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <div class="milestone-badge">📅 习惯</div>
+        <h2 class="slide-title">写作习惯</h2>
+        <p class="habit-text">你最喜欢在</p>
+        <div class="habit-highlight">
+          <span class="day-name">${report.highlights.favoriteWritingDay.dayName}</span>
+        </div>
+        <p class="habit-text">写作，共 ${report.highlights.favoriteWritingDay.count} 次</p>
+        <div class="week-chart">
+          ${report.weekly.map(w => `
+            <div class="week-item ${w.day === report.highlights.favoriteWritingDay.day ? 'active' : ''}">
+              <div class="week-bar" style="height: ${Math.max(8, (w.count / Math.max(...report.weekly.map(x => x.count), 1)) * 60)}px"></div>
+              <span class="week-label">${w.dayName.slice(1)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Slide 6: Tags
+  if (report.tags.topTags.length > 0) {
+    slides.push(`
+      <div class="slide slide-tags" data-slide-type="tags">
+        <div class="slide-bg"></div>
+        <div class="slide-content">
+          <div class="milestone-badge">🏷️ 标签</div>
+          <h2 class="slide-title">热门话题</h2>
+          <div class="tags-cloud">
+            ${report.tags.topTags.map((t, i) => `
+              <span class="tag-item" style="--delay: ${i * 0.1}s; --size: ${1.2 - i * 0.1}">
+                ${t.tag}
+                <span class="tag-count">${t.count}</span>
+              </span>
+            `).join('')}
+          </div>
+          <p class="tags-total">共使用了 ${report.tags.totalUnique} 个不同标签</p>
+        </div>
+      </div>
+    `);
+  }
+
+  // Slide 7: Longest Post
+  slides.push(`
+    <div class="slide slide-longest" data-slide-type="longest">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <div class="milestone-badge">📝 最长</div>
+        <h2 class="slide-title">字数最多的文章</h2>
+        <div class="post-card featured">
+          <h3 class="post-title">${report.highlights.longestPost.title}</h3>
+          <div class="post-meta">
+            <span class="word-count">${formatNumber(report.highlights.longestPost.words)} 字</span>
+          </div>
+        </div>
+        <p class="longest-comment">这篇文章凝聚了你的心血</p>
+      </div>
+    </div>
+  `);
+
+  // Slide 8: Fun Facts
+  slides.push(`
+    <div class="slide slide-fun" data-slide-type="funFacts">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <div class="milestone-badge">✨ 趣味</div>
+        <h2 class="slide-title">有趣的数字</h2>
+        <div class="fun-facts">
+          <div class="fun-item">
+            <span class="fun-icon">📚</span>
+            <span class="fun-text">相当于 <strong>${report.funFacts.booksEquivalent}</strong> 本书</span>
+          </div>
+          <div class="fun-item">
+            <span class="fun-icon">📄</span>
+            <span class="fun-text">约 <strong>${report.funFacts.pagesEquivalent}</strong> 页A4纸</span>
+          </div>
+          <div class="fun-item">
+            <span class="fun-icon">📊</span>
+            <span class="fun-text">月均 <strong>${report.funFacts.avgPostsPerMonth}</strong> 篇</span>
+          </div>
+          ${report.overview.longestStreak > 1 ? `
+          <div class="fun-item">
+            <span class="fun-icon">🔥</span>
+            <span class="fun-text">连续 <strong>${report.overview.longestStreak}</strong> 天</span>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Slide 9: Final
+  slides.push(`
+    <div class="slide slide-final" data-slide-type="final">
+      <div class="slide-bg"></div>
+      <div class="slide-content">
+        <h2 class="final-title">${report.year}</h2>
+        <p class="final-subtitle">感谢你的每一次记录</p>
+        <div class="final-stats">
+          <span>${report.overview.totalPosts} 篇</span>
+          <span>·</span>
+          <span>${formatNumber(report.overview.totalWords)} 字</span>
+        </div>
+        <p class="final-message">期待 ${report.year + 1} 年继续书写</p>
+        <a href="/statistic/" class="final-btn">返回统计</a>
+      </div>
+    </div>
+  `);
+
+  return slides.map((slide, i) => `
+    <div class="slide-wrapper" data-index="${i}">
+      ${slide}
+    </div>
+  `).join('');
+}
+
+function generateDots(count: number): string {
+  return Array(count).fill(0).map((_, i) =>
+    `<button class="slide-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
+  ).join('');
+}
+
+function updateSlide(index: number) {
+  const wrapper = document.getElementById('slides-wrapper');
+  const dots = document.querySelectorAll('.slide-dot');
+
+  if (!wrapper) return;
+
+  currentSlide = Math.max(0, Math.min(index, totalSlides - 1));
+  wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentSlide);
+  });
+
+  // Hide swipe hint
+  const hint = document.getElementById('swipe-hint');
+  if (hint && currentSlide > 0) {
+    hint.style.opacity = '0';
+  }
+}
+
+function nextSlide() {
+  if (currentSlide < totalSlides - 1) {
+    updateSlide(currentSlide + 1);
+  }
+}
+
+function prevSlide() {
+  if (currentSlide > 0) {
+    updateSlide(currentSlide - 1);
+  }
+}
+
+function changeYear(direction: number) {
+  if (!reportData) return;
+
+  const newIndex = currentYearIndex + direction;
+  if (newIndex >= 0 && newIndex < reportData.years.length) {
+    currentYearIndex = newIndex;
+    currentSlide = 0;
+    renderReport();
+  }
+}
+
+// AI 生成所有卡片背景
+async function generateAllAIBackgrounds() {
+  if (!reportData) return;
+
+  const year = reportData.years[currentYearIndex];
+  const report = reportData.reports[year];
+
+  if (!report) return;
+
+  const modal = document.getElementById('ai-modal')!;
+  const progressBar = document.getElementById('ai-progress-bar')!;
+  const statusText = document.getElementById('ai-status')!;
+
+  modal.style.display = 'flex';
+
+  const slideTypes = ['welcome', 'overview', 'firstPost', 'productive', 'habit', 'tags', 'longest', 'funFacts', 'final'];
+  const totalSteps = slideTypes.length;
+
+  for (let i = 0; i < totalSteps; i++) {
+    const slideType = slideTypes[i];
+    statusText.textContent = `正在生成第 ${i + 1}/${totalSteps} 张卡片...`;
+    progressBar.style.width = `${((i + 1) / totalSteps) * 100}%`;
+
+    const imageUrl = await generateAIImage(slideType, report);
+    if (imageUrl) {
+      applyAIBackground(i, imageUrl);
+    }
+
+    // 小延迟避免请求过快
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  statusText.textContent = '生成完成！';
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 1000);
+}
+
+function renderReport() {
+  if (!reportData || reportData.years.length === 0) {
+    document.getElementById('loading-screen')!.style.display = 'none';
+    document.getElementById('no-data')!.style.display = 'flex';
+    return;
+  }
+
+  const year = reportData.years[currentYearIndex];
+  const report = reportData.reports[year];
+
+  if (!report) {
+    document.getElementById('loading-screen')!.style.display = 'none';
+    document.getElementById('no-data')!.style.display = 'flex';
+    return;
+  }
+
+  // Update year display
+  document.getElementById('current-year-display')!.textContent = String(year);
+
+  // Update year navigation
+  const prevBtn = document.getElementById('prev-year') as HTMLButtonElement;
+  const nextBtn = document.getElementById('next-year') as HTMLButtonElement;
+  prevBtn.disabled = currentYearIndex >= reportData.years.length - 1;
+  nextBtn.disabled = currentYearIndex <= 0;
+
+  // Generate slides
+  const slidesHtml = generateSlides(report);
+  const wrapper = document.getElementById('slides-wrapper')!;
+  wrapper.innerHTML = slidesHtml;
+
+  // Count slides
+  totalSlides = wrapper.querySelectorAll('.slide-wrapper').length;
+
+  // Generate dots
+  const nav = document.getElementById('slide-nav')!;
+  nav.innerHTML = generateDots(totalSlides);
+
+  // Add dot click listeners
+  nav.querySelectorAll('.slide-dot').forEach(dot => {
+    dot.addEventListener('click', (e) => {
+      const index = parseInt((e.currentTarget as HTMLElement).dataset.index || '0');
+      updateSlide(index);
+    });
+  });
+
+  // Reset position
+  updateSlide(0);
+
+  // Show report
+  document.getElementById('loading-screen')!.style.display = 'none';
+  document.getElementById('report-container')!.style.display = 'flex';
+}
+
+async function loadReport() {
+  try {
+    const response = await fetch('/stats/annual-report.json');
+    if (!response.ok) {
+      throw new Error('Report not found');
+    }
+    reportData = await response.json();
+
+    if (reportData && reportData.years.length > 0) {
+      currentYearIndex = 0;
+    }
+
+    renderReport();
+  } catch (error) {
+    console.error('Failed to load annual report:', error);
+    document.getElementById('loading-screen')!.style.display = 'none';
+    document.getElementById('no-data')!.style.display = 'flex';
+  }
+}
+
+function initAnnualReport() {
+  // Navigation buttons
+  document.getElementById('slide-prev')?.addEventListener('click', prevSlide);
+  document.getElementById('slide-next')?.addEventListener('click', nextSlide);
+  document.getElementById('prev-year')?.addEventListener('click', () => changeYear(1));
+  document.getElementById('next-year')?.addEventListener('click', () => changeYear(-1));
+
+  // AI generate button
+  document.getElementById('ai-generate-btn')?.addEventListener('click', generateAllAIBackgrounds);
+
+  // Modal close
+  document.getElementById('ai-modal-close')?.addEventListener('click', () => {
+    document.getElementById('ai-modal')!.style.display = 'none';
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+  });
+
+  // Touch support
+  const container = document.getElementById('report-container');
+  if (container) {
+    container.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
+  }
+
+  // Load data
+  loadReport();
+}
+
+// Initialize
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAnnualReport);
+} else {
+  initAnnualReport();
+}
+
+// Swup support
+if (typeof window !== 'undefined' && (window as any).swup) {
+  (window as any).swup.hooks.on('page:view', () => {
+    if (document.getElementById('annual-report')) {
+      initAnnualReport();
+    }
+  });
+}
+</script>
+
+<style>
+  .annual-report {
+    min-height: 100vh;
+    @apply bg-gradient-to-br from-primary-900 via-primary-800 to-highlight-900;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Loading Screen */
+  .loading-screen {
+    @apply fixed inset-0 flex items-center justify-center bg-primary-900;
+    z-index: 100;
+  }
+
+  .loading-content {
+    @apply text-center;
+  }
+
+  .loading-spinner {
+    @apply w-12 h-12 border-4 border-primary-700 border-t-highlight-500 rounded-full mx-auto mb-4;
+    animation: spin 1s linear infinite;
+  }
+
+  .loading-text {
+    @apply text-primary-300 text-lg;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Report Container */
+  .report-container {
+    @apply fixed inset-0 flex flex-col;
+  }
+
+  /* Year Selector */
+  .year-selector {
+    @apply flex items-center justify-center gap-4 py-4;
+    @apply bg-primary-900/80 backdrop-blur-sm;
+    z-index: 20;
+  }
+
+  .year-nav-btn {
+    @apply w-10 h-10 rounded-full flex items-center justify-center;
+    @apply text-primary-400 hover:text-primary-200 hover:bg-primary-700/50;
+    @apply transition-all disabled:opacity-30 disabled:cursor-not-allowed;
+  }
+
+  .current-year {
+    @apply text-2xl font-bold text-primary-100;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  /* Slides */
+  .slides-wrapper {
+    @apply flex flex-1;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .slide-wrapper {
+    @apply flex-shrink-0 w-full h-full flex items-center justify-center;
+    min-height: calc(100vh - 140px);
+  }
+
+  .slide {
+    @apply w-full max-w-lg mx-auto px-6 py-8 rounded-2xl relative overflow-hidden;
+    @apply bg-gradient-to-br from-primary-800/90 to-primary-900/90;
+    @apply border border-primary-700/50;
+    @apply backdrop-blur-sm;
+  }
+
+  .slide-bg {
+    @apply absolute inset-0 bg-cover bg-center transition-opacity duration-500;
+    opacity: 0;
+  }
+
+  .slide.has-ai-bg .slide-bg {
+    opacity: 0.4;
+  }
+
+  .slide-content {
+    @apply text-center relative z-10;
+  }
+
+  /* Welcome Slide */
+  .welcome-year {
+    @apply text-7xl sm:text-8xl font-black text-highlight-400 mb-4;
+    text-shadow: 0 0 40px rgba(var(--highlight-500-rgb), 0.3);
+  }
+
+  .welcome-title {
+    @apply text-2xl sm:text-3xl font-bold text-primary-100 mb-2;
+  }
+
+  .welcome-subtitle {
+    @apply text-primary-400 text-lg mb-6;
+  }
+
+  .welcome-decoration {
+    @apply flex items-center justify-center gap-3;
+  }
+
+  .decoration-line {
+    @apply w-12 h-px bg-gradient-to-r from-transparent to-highlight-500;
+  }
+
+  .decoration-line:last-child {
+    @apply bg-gradient-to-l;
+  }
+
+  .decoration-dot {
+    @apply w-2 h-2 rounded-full bg-highlight-500;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+
+  /* Slide Title */
+  .slide-title {
+    @apply text-xl sm:text-2xl font-bold text-primary-100 mb-6;
+  }
+
+  /* Stat Highlight */
+  .stat-highlight {
+    @apply mb-6;
+  }
+
+  .stat-number {
+    @apply text-6xl sm:text-7xl font-black text-highlight-400 block;
+    text-shadow: 0 0 30px rgba(var(--highlight-500-rgb), 0.3);
+  }
+
+  .stat-label {
+    @apply text-lg sm:text-xl text-primary-300 mt-2 block;
+  }
+
+  .stat-secondary {
+    @apply flex items-center justify-center gap-6 mb-4;
+  }
+
+  .stat-item {
+    @apply text-center;
+  }
+
+  .stat-value {
+    @apply text-2xl sm:text-3xl font-bold text-primary-100 block;
+  }
+
+  .stat-desc {
+    @apply text-sm text-primary-400;
+  }
+
+  .stat-divider {
+    @apply w-px h-12 bg-primary-700;
+  }
+
+  .stat-comment {
+    @apply text-primary-500 text-sm;
+  }
+
+  /* Milestone Badge */
+  .milestone-badge {
+    @apply inline-block px-4 py-1 rounded-full text-sm mb-4;
+    @apply bg-highlight-500/20 text-highlight-400;
+  }
+
+  /* Post Card */
+  .post-card {
+    @apply bg-primary-800/50 rounded-xl p-5 mb-4;
+    @apply border border-primary-700;
+  }
+
+  .post-card.featured {
+    @apply bg-gradient-to-br from-highlight-900/30 to-primary-800/50;
+    @apply border-highlight-700/50;
+  }
+
+  .post-date {
+    @apply text-sm text-primary-500 block mb-2;
+  }
+
+  .post-title {
+    @apply text-lg sm:text-xl font-semibold text-primary-100;
+  }
+
+  .post-meta {
+    @apply mt-3 pt-3 border-t border-primary-700;
+  }
+
+  .word-count {
+    @apply text-highlight-400 font-semibold;
+  }
+
+  .milestone-text, .longest-comment {
+    @apply text-primary-400 text-sm;
+  }
+
+  /* Month Chart */
+  .month-highlight {
+    @apply mb-4;
+  }
+
+  .month-name {
+    @apply text-4xl sm:text-5xl font-black text-highlight-400;
+  }
+
+  .month-stat {
+    @apply text-primary-300 mb-6;
+  }
+
+  .month-stat strong {
+    @apply text-highlight-400;
+  }
+
+  .month-chart {
+    @apply flex items-end justify-center gap-1 h-16;
+  }
+
+  .month-bar {
+    @apply w-3 sm:w-4 bg-primary-700 rounded-t transition-all;
+  }
+
+  .month-bar.active {
+    @apply bg-highlight-500;
+  }
+
+  /* Week Chart */
+  .habit-text {
+    @apply text-primary-400 text-base;
+  }
+
+  .habit-highlight {
+    @apply my-3;
+  }
+
+  .day-name {
+    @apply text-4xl sm:text-5xl font-black text-highlight-400;
+  }
+
+  .week-chart {
+    @apply flex items-end justify-center gap-2 sm:gap-3 mt-6;
+  }
+
+  .week-item {
+    @apply flex flex-col items-center gap-2;
+  }
+
+  .week-bar {
+    @apply w-6 sm:w-8 bg-primary-700 rounded-t transition-all;
+  }
+
+  .week-item.active .week-bar {
+    @apply bg-highlight-500;
+  }
+
+  .week-label {
+    @apply text-xs text-primary-500;
+  }
+
+  /* Tags */
+  .tags-cloud {
+    @apply flex flex-wrap justify-center gap-2 sm:gap-3 mb-6;
+  }
+
+  .tag-item {
+    @apply px-3 py-1.5 rounded-full;
+    @apply bg-primary-800/50 text-primary-200;
+    @apply border border-primary-700;
+    font-size: calc(var(--size, 1) * 0.9rem);
+    animation: fadeIn 0.5s ease-out calc(var(--delay, 0s)) both;
+  }
+
+  .tag-count {
+    @apply ml-1 text-xs text-primary-500;
+  }
+
+  .tags-total {
+    @apply text-primary-500 text-sm;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Fun Facts */
+  .fun-facts {
+    @apply space-y-3 text-left max-w-xs mx-auto;
+  }
+
+  .fun-item {
+    @apply flex items-center gap-3 p-3 rounded-lg;
+    @apply bg-primary-800/30;
+  }
+
+  .fun-icon {
+    @apply text-xl;
+  }
+
+  .fun-text {
+    @apply text-primary-300 text-sm;
+  }
+
+  .fun-text strong {
+    @apply text-highlight-400;
+  }
+
+  /* Final Slide */
+  .final-title {
+    @apply text-7xl sm:text-8xl font-black text-highlight-400 mb-2;
+    text-shadow: 0 0 60px rgba(var(--highlight-500-rgb), 0.4);
+  }
+
+  .final-subtitle {
+    @apply text-xl sm:text-2xl text-primary-200 mb-4;
+  }
+
+  .final-stats {
+    @apply flex items-center justify-center gap-2 text-primary-400 mb-6;
+  }
+
+  .final-message {
+    @apply text-primary-500 mb-6;
+  }
+
+  .final-btn {
+    @apply inline-block px-6 py-2.5 rounded-full;
+    @apply bg-highlight-600 hover:bg-highlight-500 text-white;
+    @apply transition-colors font-medium;
+  }
+
+  /* Navigation */
+  .slide-nav {
+    @apply flex justify-center gap-2 py-3;
+    z-index: 20;
+  }
+
+  .slide-dot {
+    @apply w-2 h-2 rounded-full bg-primary-700 transition-all;
+  }
+
+  .slide-dot.active {
+    @apply w-6 bg-highlight-500;
+  }
+
+  .slide-arrow {
+    @apply fixed top-1/2 -translate-y-1/2 z-20;
+    @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center;
+    @apply bg-primary-800/50 text-primary-400;
+    @apply hover:bg-primary-700 hover:text-primary-200;
+    @apply transition-all backdrop-blur-sm;
+    @apply hidden md:flex;
+  }
+
+  .slide-arrow-left {
+    @apply left-2 sm:left-4;
+  }
+
+  .slide-arrow-right {
+    @apply right-2 sm:right-4;
+  }
+
+  /* AI Generate Button */
+  .ai-generate-btn {
+    @apply fixed bottom-20 right-4 z-20;
+    @apply flex items-center gap-2 px-4 py-2 rounded-full;
+    @apply bg-highlight-600 hover:bg-highlight-500 text-white;
+    @apply transition-all text-sm font-medium;
+    @apply shadow-lg;
+  }
+
+  /* Swipe Hint */
+  .swipe-hint {
+    @apply fixed bottom-20 left-1/2 -translate-x-1/2;
+    @apply px-4 py-2 rounded-full;
+    @apply bg-primary-800/50 text-primary-400 text-sm;
+    @apply backdrop-blur-sm;
+    @apply md:hidden;
+    transition: opacity 0.3s;
+  }
+
+  /* No Data */
+  .no-data {
+    @apply fixed inset-0 flex items-center justify-center bg-primary-900;
+  }
+
+  .no-data-content {
+    @apply text-center px-6;
+  }
+
+  .no-data-content svg {
+    @apply text-primary-600 mx-auto mb-6;
+  }
+
+  .no-data-content h2 {
+    @apply text-2xl font-bold text-primary-200 mb-2;
+  }
+
+  .no-data-content p {
+    @apply text-primary-500 mb-6;
+  }
+
+  .back-link {
+    @apply inline-block px-6 py-3 rounded-full;
+    @apply bg-highlight-600 hover:bg-highlight-500 text-white;
+    @apply transition-colors;
+  }
+
+  /* AI Modal */
+  .ai-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    @apply bg-black/60 backdrop-blur-sm;
+  }
+
+  .ai-modal-content {
+    @apply bg-primary-800 rounded-xl p-6 max-w-sm w-full mx-4;
+    @apply border border-primary-700;
+  }
+
+  .ai-modal-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .ai-modal-header h3 {
+    @apply text-lg font-bold text-primary-100;
+  }
+
+  .ai-modal-close {
+    @apply w-8 h-8 rounded-full flex items-center justify-center;
+    @apply text-primary-400 hover:text-primary-200 hover:bg-primary-700;
+    @apply text-xl transition-colors;
+  }
+
+  .ai-progress {
+    @apply w-full h-2 bg-primary-700 rounded-full overflow-hidden mb-3;
+  }
+
+  .ai-progress-bar {
+    @apply h-full bg-highlight-500 transition-all duration-300;
+    width: 0%;
+  }
+
+  .ai-status {
+    @apply text-primary-400 text-sm text-center;
+  }
+</style>
