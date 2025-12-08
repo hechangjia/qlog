@@ -206,18 +206,18 @@ export const siteConfig: SiteConfig = {
     source: "local", // "local" for self-hosted @fontsource fonts, "cdn" for Google Fonts CDN
     families: {
       // [CONFIG:FONT_BODY]
-      body: "Inter",      // Body text font family
+      body: "Source Sans Pro",      // Body text font family
       // [CONFIG:FONT_HEADING]
       heading: "Inter",   // Heading font family  
       // [CONFIG:FONT_MONO]
-      mono: "JetBrains Mono", // Monospace font family
+      mono: "Cascadia Code", // Monospace font family
     },
     // [CONFIG:FONT_DISPLAY]
     display: "swap", // Font display strategy: "swap" (recommended), "fallback", or "optional"
   },
   layout: {
     // [CONFIG:LAYOUT_CONTENT_WIDTH]
-    contentWidth: "45rem",
+    contentWidth: "66.2rem",
   },
   tableOfContents: {
     // [CONFIG:TABLE_OF_CONTENTS_ENABLED]
@@ -249,18 +249,18 @@ export const siteConfig: SiteConfig = {
     // [CONFIG:COMMAND_PALETTE_ENABLED]
     enabled: true,
     // [CONFIG:COMMAND_PALETTE_SHORTCUT]
-    shortcut: "ctrl+K",
+    shortcut: "ctrl+shift+K",
     // [CONFIG:COMMAND_PALETTE_PLACEHOLDER]
-    placeholder: "Search posts",
+    placeholder: "搜索内容",
     search: {
       // [CONFIG:COMMAND_PALETTE_SEARCH_POSTS]
       posts: true,
       // [CONFIG:COMMAND_PALETTE_SEARCH_PAGES]
-      pages: false,
+      pages: true,
       // [CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS]
-      projects: false,
+      projects: true,
       // [CONFIG:COMMAND_PALETTE_SEARCH_DOCS]
-      docs: false,
+      docs: true,
     },
     sections: {
       // [CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS]
@@ -295,7 +295,7 @@ export const siteConfig: SiteConfig = {
     // [CONFIG:PROFILE_PICTURE_URL]
     url: "", // Optional
     // [CONFIG:PROFILE_PICTURE_PLACEMENT]
-    placement: "footer", // "footer" or "header"
+    placement: "header", // "footer" or "header"
     // [CONFIG:PROFILE_PICTURE_STYLE]
     style: "circle", // "circle", "square", or "none"
   },

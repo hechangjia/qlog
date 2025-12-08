@@ -1,5 +1,5 @@
 {
-  "runWizardOnStartup": true,
+  "runWizardOnStartup": false,
   "currentTemplate": "standard",
   "currentTheme": "oxygen",
   "customThemeFile": "custom",
@@ -21,7 +21,7 @@
     "defaultOgImageAlt": "Astro Modular logo."
   },
   "layout": {
-    "contentWidth": "45rem"
+    "contentWidth": "66.2rem"
   },
   "tableOfContents": {
     "enabled": true,
@@ -71,13 +71,13 @@
   },
   "commandPalette": {
     "enabled": true,
-    "shortcut": "ctrl+K",
-    "placeholder": "Search posts",
+    "shortcut": "ctrl+shift+K",
+    "placeholder": "搜索内容",
     "search": {
       "posts": true,
-      "pages": false,
-      "projects": false,
-      "docs": false
+      "pages": true,
+      "projects": true,
+      "docs": true
     },
     "sections": {
       "quickActions": true,
@@ -176,8 +176,8 @@
   },
   "typography": {
     "headingFont": "Inter",
-    "proseFont": "Inter",
-    "monoFont": "JetBrains Mono",
+    "proseFont": "Source Sans Pro",
+    "monoFont": "Cascadia Code",
     "fontSource": "local",
     "fontDisplay": "swap",
     "customFonts": {
@@ -194,7 +194,7 @@
       "alt": "Profile picture",
       "size": "lg",
       "url": "",
-      "placement": "footer",
+      "placement": "header",
       "style": "circle"
     },
     "comments": {
