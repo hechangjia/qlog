@@ -3,7 +3,24 @@
 
 [Build]
   Publish = "dist"
-  Functions = ""
+  Functions = "netlify/functions"
+
+[Functions]
+  # Node.js version for functions
+  node_bundler = "esbuild"
+
+# API Routes - Redirect to Netlify Functions
+[[Redirects]]
+  From = "/api/deepseek-chat"
+  To = "/.netlify/functions/deepseek-chat"
+  Status = 200
+  Force = true
+
+[[Redirects]]
+  From = "/api/zimage-generate"
+  To = "/.netlify/functions/zimage-generate"
+  Status = 200
+  Force = true
 
 [[Redirects]]
   From = "/about-me"

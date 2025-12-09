@@ -30,7 +30,7 @@ const DEPLOYMENT_PLATFORM = process.env.DEPLOYMENT_PLATFORM || 'netlify';
 
 export default defineConfig({
   site: siteConfig.site,
-  output: 'server', // Server mode: enables API routes as Netlify Functions
+  output: 'static', // Static mode: pre-render all pages
   adapter: netlify({
     edgeMiddleware: false,
   }),
