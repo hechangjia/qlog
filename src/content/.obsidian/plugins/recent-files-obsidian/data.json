@@ -1,0 +1,88 @@
+{
+  "recentFiles": [
+    {
+      "basename": "Home",
+      "path": "bases/Home.base"
+    },
+    {
+      "basename": "2025-12-07",
+      "path": "diary/2025-12-07.md"
+    },
+    {
+      "basename": "2025-12-09-beautiful-day",
+      "path": "diary/2025-12-09-beautiful-day.md"
+    },
+    {
+      "basename": "advanced-slides-tutorial",
+      "path": "slides/advanced-slides-tutorial.md"
+    },
+    {
+      "basename": "dataview-demo",
+      "path": "slides/dataview-demo.md"
+    },
+    {
+      "basename": "obsidian-integration",
+      "path": "slides/obsidian-integration.md"
+    },
+    {
+      "basename": "statistic",
+      "path": "special/statistic.md"
+    },
+    {
+      "basename": "todo",
+      "path": "special/todo.md"
+    },
+    {
+      "basename": "2025-12-08",
+      "path": "diary/2025-12-08.md"
+    },
+    {
+      "basename": "2025-12-09",
+      "path": "diary/2025-12-09.md"
+    },
+    {
+      "basename": "obsidian-embeds-demo",
+      "path": "posts/obsidian-embeds-demo.md"
+    },
+    {
+      "basename": "projects",
+      "path": "special/projects.md"
+    },
+    {
+      "basename": "todo",
+      "path": "todo/todo.md"
+    },
+    {
+      "basename": "2025-12-qlog-development",
+      "path": "todo/2025-12-qlog-development.md"
+    },
+    {
+      "basename": "todo",
+      "path": "todo/todo.base"
+    },
+    {
+      "basename": "zootopia",
+      "path": "posts/zootopia.md"
+    },
+    {
+      "basename": "vault-cms-guide",
+      "path": "posts/vault-cms-guide.md"
+    },
+    {
+      "basename": "Zootopia-cover",
+      "path": "posts/attachments/zootopia/Zootopia-cover.png"
+    },
+    {
+      "basename": "DATAVIEW-EXAMPLES",
+      "path": "template/DATAVIEW-EXAMPLES.md"
+    },
+    {
+      "basename": "templater-template",
+      "path": "template/slides/templater-template.md"
+    }
+  ],
+  "omittedPaths": [],
+  "omittedTags": [],
+  "updateOn": "file-open",
+  "omitBookmarks": false
+}

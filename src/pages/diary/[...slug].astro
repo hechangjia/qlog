@@ -1,0 +1,42 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { shouldShowPost } from '@/utils/markdown';
+import DiaryLayout from '@/layouts/DiaryLayout.astro';
+
+export const prerender = true;
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  // Get all diary entries
+  const diaries = await getCollection('diary');
+
+  // Filter diaries for production (in dev, show all including drafts)
+  const isDev = import.meta.env.DEV;
+  const visibleDiaries = diaries.filter(diary => shouldShowPost(diary, isDev));
+
+  // Generate paths
+  return visibleDiaries.map(diary => ({
+    params: { slug: diary.id },
+    props: { post: diary }
+  }));
+};
+
+export interface Props {
+  post: any;
+}
+
+const { post } = Astro.props;
+
+// Validate diary data
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+// Check if diary should be visible in production
+const isDev = import.meta.env.DEV;
+if (!shouldShowPost(post, isDev)) {
+  return Astro.redirect('/404');
+}
+---
+
+<DiaryLayout diary={post} />

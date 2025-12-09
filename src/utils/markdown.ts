@@ -306,6 +306,23 @@ export function getAdjacentPosts(posts: Post[], currentSlug: string) {
   };
 }
 
+// Generic function to get adjacent items for any content type
+export function getAdjacentItems<T extends { id: string; data: { date: Date } }>(
+  items: T[],
+  currentSlug: string
+) {
+  const sortedItems = sortPostsByDate(items);
+  const currentIndex = sortedItems.findIndex((item) => item.id === currentSlug);
+
+  return {
+    prev: currentIndex > 0 ? sortedItems[currentIndex - 1] : null,
+    next:
+      currentIndex < sortedItems.length - 1
+        ? sortedItems[currentIndex + 1]
+        : null,
+  };
+}
+
 // Get next and previous documentation items within the same category, sorted by order
 export function getAdjacentDocs<T extends { id: string; data: { category?: string | null; order: number; title: string } }>(
   docs: T[],
@@ -357,19 +374,18 @@ export function getAdjacentDocs<T extends { id: string; data: { category?: strin
   };
 }
 
-// Extract tags from posts
-export function extractTags(posts: Post[]): string[] {
+// Extract tags from any content type with tags field
+export function extractTags<T extends { data: { tags?: string[] | null | string } }>(items: T[]): string[] {
   const tags = new Set<string>();
-  const isDev = import.meta.env.DEV;
 
   try {
-    posts.forEach((post) => {
-      if (post.data.tags) {
+    items.forEach((item) => {
+      if (item.data.tags) {
         // Handle both string and array tags, and filter out invalid values
-        const postTags = Array.isArray(post.data.tags)
-          ? post.data.tags
-          : [post.data.tags];
-        postTags.forEach((tag) => {
+        const itemTags = Array.isArray(item.data.tags)
+          ? item.data.tags
+          : [item.data.tags];
+        itemTags.forEach((tag) => {
           if (tag && typeof tag === "string" && tag.trim()) {
             tags.add(tag.trim());
           }

@@ -1,0 +1,159 @@
+---
+// Component to display Dataview query blocks
+interface Props {
+  title?: string;
+  query: string;
+  description?: string;
+  type?: 'dataview' | 'dataviewjs' | 'base';
+}
+
+const { title, query, description, type = 'dataview' } = Astro.props;
+---
+
+<div class="dataview-query-card">
+  {title && <h3 class="query-title">{title}</h3>}
+  {description && <p class="query-description">{description}</p>}
+
+  <div class="query-block">
+    <div class="query-header">
+      <span class="query-type">{type}</span>
+      <button class="copy-button" data-query={query} title="复制查询">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+    </div>
+    <pre class="query-code"><code>{query.trim()}</code></pre>
+  </div>
+</div>
+
+<style>
+  .dataview-query-card {
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    transition: all 0.2s ease;
+  }
+
+  .dataview-query-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .query-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-heading);
+  }
+
+  .query-description {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  .query-block {
+    background: var(--color-surface-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+  }
+
+  .query-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: var(--color-surface-secondary);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .query-type {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+
+  .copy-button {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+    border-radius: var(--radius-sm);
+  }
+
+  .copy-button:hover {
+    color: var(--color-accent);
+    background: var(--color-surface-tertiary);
+  }
+
+  .copy-button:active {
+    transform: scale(0.95);
+  }
+
+  .query-code {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-text-body);
+  }
+
+  .query-code code {
+    font-family: inherit;
+    background: transparent;
+    padding: 0;
+  }
+
+  @media (max-width: 768px) {
+    .dataview-query-card {
+      padding: 1rem;
+    }
+
+    .query-code {
+      font-size: 0.8rem;
+    }
+  }
+</style>
+
+<script>
+  // Copy query to clipboard
+  document.addEventListener('DOMContentLoaded', () => {
+    const copyButtons = document.querySelectorAll('.copy-button');
+
+    copyButtons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const query = button.getAttribute('data-query');
+        if (query) {
+          try {
+            await navigator.clipboard.writeText(query);
+
+            // Visual feedback
+            const originalHTML = button.innerHTML;
+            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+            setTimeout(() => {
+              button.innerHTML = originalHTML;
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy query:', err);
+          }
+        }
+      });
+    });
+  });
+</script>

@@ -1,0 +1,31 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import SlideLayout from '@/layouts/SlideLayout.astro';
+
+export const prerender = true;
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const slides = await getCollection('slides');
+  const isDev = import.meta.env.DEV;
+
+  // Filter out drafts in production
+  const visibleSlides = isDev
+    ? slides
+    : slides.filter(slide => !slide.data.draft);
+
+  return visibleSlides.map(slide => ({
+    params: { slug: slide.id },
+    props: { slide }
+  }));
+};
+
+const { slide } = Astro.props;
+
+// Redirect to 404 if slide not found or is draft in production
+if (!slide) return Astro.redirect('/404');
+const isDev = import.meta.env.DEV;
+if (!isDev && slide.data.draft) return Astro.redirect('/404');
+---
+
+<SlideLayout slide={slide} />

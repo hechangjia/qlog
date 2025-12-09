@@ -1,0 +1,582 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection, getEntry } from 'astro:content';
+import { siteConfig } from '@/config';
+import ActivityHeatmap from '@/components/ActivityHeatmap.astro';
+import MonthlyTrends from '@/components/MonthlyTrends.astro';
+import DataviewResult from '@/components/DataviewResult.astro';
+import { groupDataviewBlocks } from '@/utils/dataview-parser';
+
+// Get all content collections
+const diaryEntries = await getCollection('diary');
+const todoItems = await getCollection('todo');
+const posts = await getCollection('posts');
+
+// Get the statistic page content from special collection
+const statisticPage = await getEntry('special', 'statistic');
+let dataviewGroups: Record<string, any[]> = {};
+
+if (statisticPage && statisticPage.body) {
+  dataviewGroups = groupDataviewBlocks(statisticPage.body);
+}
+
+// Filter out drafts in production
+const isDev = import.meta.env.DEV;
+const visibleDiaryEntries = isDev ? diaryEntries : diaryEntries.filter(entry => !entry.data.draft);
+const visibleTodoItems = isDev ? todoItems : todoItems.filter(todo => !todo.data.draft);
+const visiblePosts = isDev ? posts : posts.filter(post => !post.data.draft);
+
+// Calculate statistics
+const totalDiaryEntries = visibleDiaryEntries.length;
+const totalTodoItems = visibleTodoItems.length;
+const totalPosts = visiblePosts.length;
+const totalContent = totalDiaryEntries + totalTodoItems + totalPosts;
+
+const completedTodos = visibleTodoItems.filter(todo => todo.data.status === 'done').length;
+const inProgressTodos = visibleTodoItems.filter(todo => todo.data.status === 'in-progress').length;
+const pendingTodos = visibleTodoItems.filter(todo => todo.data.status === 'todo').length;
+
+// Mood statistics
+const moodCounts = {
+  happy: visibleDiaryEntries.filter(entry => entry.data.mood === 'happy').length,
+  sad: visibleDiaryEntries.filter(entry => entry.data.mood === 'sad').length,
+  neutral: visibleDiaryEntries.filter(entry => entry.data.mood === 'neutral').length,
+  excited: visibleDiaryEntries.filter(entry => entry.data.mood === 'excited').length,
+  tired: visibleDiaryEntries.filter(entry => entry.data.mood === 'tired').length,
+  stressed: visibleDiaryEntries.filter(entry => entry.data.mood === 'stressed').length,
+  peaceful: visibleDiaryEntries.filter(entry => entry.data.mood === 'peaceful').length,
+};
+
+// Priority statistics
+const priorityCounts = {
+  high: visibleTodoItems.filter(todo => todo.data.priority === 'high').length,
+  medium: visibleTodoItems.filter(todo => todo.data.priority === 'medium').length,
+  low: visibleTodoItems.filter(todo => todo.data.priority === 'low').length,
+};
+
+// Calculate average progress for todos that have progress
+const todosWithProgress = visibleTodoItems.filter(todo => todo.data.progress !== undefined && todo.data.progress !== null);
+const averageProgress = todosWithProgress.length > 0
+  ? Math.round(todosWithProgress.reduce((sum, todo) => sum + (todo.data.progress || 0), 0) / todosWithProgress.length)
+  : 0;
+
+// Get recent entries (last 7 days)
+const oneWeekAgo = new Date();
+oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+const recentDiaryEntries = visibleDiaryEntries.filter(entry => entry.data.date >= oneWeekAgo);
+const recentTodoItems = visibleTodoItems.filter(todo => todo.data.date >= oneWeekAgo);
+const recentPosts = visiblePosts.filter(post => post.data.date >= oneWeekAgo);
+
+// Calculate completion rate
+const completionRate = totalTodoItems > 0 ? Math.round((completedTodos / totalTodoItems) * 100) : 0;
+
+// Get most common tags (including posts, diary, and todo)
+const allTags = [
+  ...visibleDiaryEntries.flatMap(entry => entry.data.tags || []),
+  ...visibleTodoItems.flatMap(todo => todo.data.tags || []),
+  ...visiblePosts.flatMap(post => post.data.tags || [])
+];
+const tagCounts: Record<string, number> = {};
+allTags.forEach(tag => {
+  tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+});
+const topTags = Object.entries(tagCounts)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10)
+  .map(([tag, count]) => ({ tag, count }));
+
+// Get overdue todos
+const overdueTodos = visibleTodoItems.filter(todo =>
+  todo.data.dueDate &&
+  todo.data.dueDate < new Date() &&
+  todo.data.status !== 'done'
+);
+
+// Get upcoming deadlines (next 7 days)
+const nextWeek = new Date();
+nextWeek.setDate(nextWeek.getDate() + 7);
+const upcomingDeadlines = visibleTodoItems.filter(todo =>
+  todo.data.dueDate &&
+  todo.data.dueDate > new Date() &&
+  todo.data.dueDate <= nextWeek &&
+  todo.data.status !== 'done'
+);
+
+// Page title and description
+const pageTitle = '个人统计仪表板';
+const pageDescription = '可视化查看您的日记、待办事项和博客文章，包含洞察和分析。';
+
+const seoData = {
+  title: `${pageTitle} | ${siteConfig.title}`,
+  description: pageDescription,
+  canonical: Astro.url.href,
+  ogType: 'website' as const
+};
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="min-h-screen bg-gradient-to-b from-primary-50 to-primary-100 dark:from-primary-900 dark:to-primary-800">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header -->
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-primary-900 dark:text-primary-100 mb-4">
+          {pageTitle}
+        </h1>
+        <p class="text-lg text-primary-700 dark:text-primary-300">
+          {pageDescription}
+        </p>
+      </header>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <!-- 总内容 -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-2 bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border-2 border-highlight-300 dark:border-highlight-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-primary-600 dark:text-primary-400">总内容</p>
+              <p class="text-4xl font-bold text-primary-900 dark:text-primary-100">{totalContent}</p>
+            </div>
+            <div class="p-3 bg-highlight-100 dark:bg-highlight-900 rounded-lg">
+              <svg class="w-10 h-10 text-highlight-600 dark:text-highlight-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-4">
+            {totalPosts} 篇文章 + {totalDiaryEntries} 篇日记 + {totalTodoItems} 项待办
+          </p>
+        </div>
+
+        <!-- 博客文章 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-primary-600 dark:text-primary-400">博客文章</p>
+              <p class="text-3xl font-bold text-primary-900 dark:text-primary-100">{totalPosts}</p>
+            </div>
+            <div class="p-3 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+              <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-4">
+            {recentPosts.length} 最近一周
+          </p>
+        </div>
+
+        <!-- 日记条目 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-primary-600 dark:text-primary-400">日记条目</p>
+              <p class="text-3xl font-bold text-primary-900 dark:text-primary-100">{totalDiaryEntries}</p>
+            </div>
+            <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-4">
+            {recentDiaryEntries.length} 最近一周
+          </p>
+        </div>
+
+        <!-- 待办事项 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-primary-600 dark:text-primary-400">待办事项</p>
+              <p class="text-3xl font-bold text-primary-900 dark:text-primary-100">{totalTodoItems}</p>
+            </div>
+            <div class="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+              <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-4">
+            {completedTodos} 已完成，{inProgressTodos} 进行中
+          </p>
+        </div>
+
+        <!-- 完成率 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-primary-600 dark:text-primary-400">完成率</p>
+              <p class="text-3xl font-bold text-primary-900 dark:text-primary-100">{completionRate}%</p>
+            </div>
+            <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+              <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-4">
+            {completedTodos}/{totalTodoItems} 任务已完成
+          </p>
+        </div>
+
+        <!-- 平均进度 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-primary-600 dark:text-primary-400">平均进度</p>
+              <p class="text-3xl font-bold text-primary-900 dark:text-primary-100">{averageProgress}%</p>
+            </div>
+            <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+              <svg class="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-4">
+            跨越 {todosWithProgress.length} 个任务
+          </p>
+        </div>
+      </div>
+
+      <!-- Activity Heatmap -->
+      <div class="mt-8">
+        <ActivityHeatmap diaryEntries={visibleDiaryEntries} todoItems={visibleTodoItems} posts={visiblePosts} weeks={52} />
+      </div>
+
+      <!-- Monthly Trends -->
+      <div class="mt-8">
+        <MonthlyTrends diaryEntries={visibleDiaryEntries} todoItems={visibleTodoItems} posts={visiblePosts} months={12} />
+      </div>
+
+      <!-- Charts and Detailed Statistics -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <!-- 心情分布 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">心情分布</h2>
+          <div class="space-y-4">
+            {Object.entries(moodCounts).map(([mood, count]) => {
+              if (count === 0) return null;
+              const percentage = totalDiaryEntries > 0 ? Math.round((count / totalDiaryEntries) * 100) : 0;
+              return (
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm font-medium text-primary-700 dark:text-primary-300 capitalize">{mood}</span>
+                    <span class="text-sm font-medium text-primary-600 dark:text-primary-400">{count} ({percentage}%)</span>
+                  </div>
+                  <div class="w-full bg-primary-200 dark:bg-primary-700 rounded-full h-2">
+                    <div
+                      class="h-2 rounded-full transition-all duration-300"
+                      style={`width: ${percentage}%; background-color: ${
+                        mood === 'happy' ? '#10b981' :
+                        mood === 'sad' ? '#ef4444' :
+                        mood === 'excited' ? '#f59e0b' :
+                        mood === 'tired' ? '#8b5cf6' :
+                        mood === 'stressed' ? '#dc2626' :
+                        mood === 'peaceful' ? '#3b82f6' :
+                        '#6b7280'
+                      }`}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+            {totalDiaryEntries === 0 && (
+              <p class="text-primary-600 dark:text-primary-400 text-center py-4">
+                暂无日记条目。开始写作以查看心情统计。
+              </p>
+            )}
+          </div>
+        </div>
+
+        <!-- 优先级分布 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">待办优先级分布</h2>
+          <div class="space-y-4">
+            {Object.entries(priorityCounts).map(([priority, count]) => {
+              const percentage = totalTodoItems > 0 ? Math.round((count / totalTodoItems) * 100) : 0;
+              return (
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm font-medium text-primary-700 dark:text-primary-300 capitalize">{priority}</span>
+                    <span class="text-sm font-medium text-primary-600 dark:text-primary-400">{count} ({percentage}%)</span>
+                  </div>
+                  <div class="w-full bg-primary-200 dark:bg-primary-700 rounded-full h-2">
+                    <div
+                      class="h-2 rounded-full transition-all duration-300"
+                      style={`width: ${percentage}%; background-color: ${
+                        priority === 'high' ? '#ef4444' :
+                        priority === 'medium' ? '#f59e0b' :
+                        '#10b981'
+                      }`}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+            {totalTodoItems === 0 && (
+              <p class="text-primary-600 dark:text-primary-400 text-center py-4">
+                暂无待办事项。创建任务以查看优先级统计。
+              </p>
+            )}
+          </div>
+        </div>
+
+        <!-- 状态概览 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">待办状态概览</h2>
+          <div class="flex items-center justify-center h-64">
+            {totalTodoItems > 0 ? (
+              <div class="relative w-48 h-48">
+                <!-- Pie chart visualization -->
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                  {(() => {
+                    const angles = {
+                      done: (completedTodos / totalTodoItems) * 360,
+                      'in-progress': (inProgressTodos / totalTodoItems) * 360,
+                      'todo': (pendingTodos / totalTodoItems) * 360
+                    };
+
+                    let currentAngle = 0;
+                    const sections = [];
+
+                    Object.entries(angles).forEach(([status, angle]) => {
+                      if (angle > 0) {
+                        const x1 = 50 + 40 * Math.cos(currentAngle * Math.PI / 180);
+                        const y1 = 50 + 40 * Math.sin(currentAngle * Math.PI / 180);
+                        const x2 = 50 + 40 * Math.cos((currentAngle + angle) * Math.PI / 180);
+                        const y2 = 50 + 40 * Math.sin((currentAngle + angle) * Math.PI / 180);
+
+                        const largeArcFlag = angle > 180 ? 1 : 0;
+
+                        sections.push(`
+                          <path
+                            d="M50,50 L${x1},${y1} A40,40 0 ${largeArcFlag},1 ${x2},${y2} Z"
+                            fill="${
+                              status === 'done' ? '#10b981' :
+                              status === 'in-progress' ? '#3b82f6' :
+                              '#f59e0b'
+                            }"
+                            stroke="white"
+                            stroke-width="2"
+                          />
+                        `);
+
+                        currentAngle += angle;
+                      }
+                    });
+
+                    return sections.join('');
+                  })()}
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-3xl font-bold text-primary-900 dark:text-primary-100">{totalTodoItems}</span>
+                  <span class="text-sm text-primary-600 dark:text-primary-400">总任务</span>
+                </div>
+              </div>
+            ) : (
+              <p class="text-primary-600 dark:text-primary-400 text-center">
+                暂无待办事项。创建任务以查看状态概览。
+              </p>
+            )}
+          </div>
+          <div class="grid grid-cols-3 gap-4 mt-6">
+            <div class="text-center">
+              <div class="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2"></div>
+              <span class="text-sm font-medium text-primary-700 dark:text-primary-300">已完成</span>
+              <p class="text-lg font-bold text-primary-900 dark:text-primary-100">{completedTodos}</p>
+            </div>
+            <div class="text-center">
+              <div class="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
+              <span class="text-sm font-medium text-primary-700 dark:text-primary-300">进行中</span>
+              <p class="text-lg font-bold text-primary-900 dark:text-primary-100">{inProgressTodos}</p>
+            </div>
+            <div class="text-center">
+              <div class="w-4 h-4 bg-yellow-500 rounded-full mx-auto mb-2"></div>
+              <span class="text-sm font-medium text-primary-700 dark:text-primary-300">待办</span>
+              <p class="text-lg font-bold text-primary-900 dark:text-primary-100">{pendingTodos}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最常用标签 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
+          <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">最常用标签</h2>
+          <div class="space-y-3">
+            {topTags.map(({ tag, count }) => (
+              <div class="flex items-center justify-between">
+                <a
+                  href={`/posts/tag/${encodeURIComponent(tag)}`}
+                  class="text-primary-700 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 transition-colors"
+                >
+                  #{tag}
+                </a>
+                <span class="text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-100 dark:bg-primary-700 px-3 py-1 rounded-full">
+                  {count} 条目
+                </span>
+              </div>
+            ))}
+            {topTags.length === 0 && (
+              <p class="text-primary-600 dark:text-primary-400 text-center py-4">
+                暂无使用标签。为日记和待办事项添加标签。
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <!-- Deadlines Section -->
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 逾期待办 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-red-200 dark:border-red-900">
+          <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            逾期待办 ({overdueTodos.length})
+          </h2>
+          <div class="space-y-3">
+            {overdueTodos.slice(0, 5).map(todo => (
+              <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
+                <div>
+                  <p class="font-medium text-primary-900 dark:text-primary-100">{todo.data.title}</p>
+                  <p class="text-sm text-primary-600 dark:text-primary-400">
+                    截止日期：{todo.data.dueDate?.toLocaleDateString("zh-CN", {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <a
+                  href={`/todo/${todo.id}`}
+                  class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+                >
+                  查看 →
+                </a>
+              </div>
+            ))}
+            {overdueTodos.length === 0 && (
+              <p class="text-primary-600 dark:text-primary-400 text-center py-4">
+                没有逾期待办。做得好！
+              </p>
+            )}
+            {overdueTodos.length > 5 && (
+              <p class="text-sm text-primary-600 dark:text-primary-400 text-center">
+                ...以及 {overdueTodos.length - 5} 个更多逾期任务
+              </p>
+            )}
+          </div>
+        </div>
+
+        <!-- 即将到期 -->
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-blue-200 dark:border-blue-900">
+          <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            即将到期 ({upcomingDeadlines.length})
+          </h2>
+          <div class="space-y-3">
+            {upcomingDeadlines.slice(0, 5).map(todo => (
+              <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                <div>
+                  <p class="font-medium text-primary-900 dark:text-primary-100">{todo.data.title}</p>
+                  <p class="text-sm text-primary-600 dark:text-primary-400">
+                    截止日期：{todo.data.dueDate?.toLocaleDateString("zh-CN", {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <a
+                  href={`/todo/${todo.id}`}
+                  class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                >
+                  查看 →
+                </a>
+              </div>
+            ))}
+            {upcomingDeadlines.length === 0 && (
+              <p class="text-primary-600 dark:text-primary-400 text-center py-4">
+                没有即将到期的任务。
+              </p>
+            )}
+            {upcomingDeadlines.length > 5 && (
+              <p class="text-sm text-primary-600 dark:text-primary-400 text-center">
+                ...以及 {upcomingDeadlines.length - 5} 个更多即将到期的任务
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <!-- Dataview Queries Section -->
+      <div class="mt-12">
+        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-8 border border-primary-200 dark:border-primary-700">
+          <div class="flex items-center gap-3 mb-6">
+            <svg class="w-8 h-8 text-accent-600 dark:text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100">
+              Obsidian Dataview 查询示例
+            </h2>
+          </div>
+
+          <p class="text-primary-600 dark:text-primary-400 mb-6">
+            以下是使用 Dataview 查询语法执行的实时数据统计。
+          </p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Object.entries(dataviewGroups).map(([groupName, blocks]) => (
+              <div class="space-y-4 {Object.keys(dataviewGroups).length === 1 || groupName.includes('综合') ? 'lg:col-span-2' : ''}">
+                <h3 class="text-lg font-semibold text-primary-900 dark:text-primary-100 flex items-center gap-2">
+                  {groupName.includes('日记') && (
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                  )}
+                  {groupName.includes('待办') && (
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                  )}
+                  {groupName.includes('综合') && (
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                  )}
+                  {groupName}
+                </h3>
+
+                {groupName.includes('综合') ? (
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {blocks.map(block => (
+                      <DataviewResult
+                        title={block.title}
+                        description={block.description}
+                        query={block.query}
+                        collections={{ diary: visibleDiaryEntries, todo: visibleTodoItems, posts: visiblePosts }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {blocks.map(block => (
+                      <DataviewResult
+                        title={block.title}
+                        description={block.description}
+                        query={block.query}
+                        collections={{ diary: visibleDiaryEntries, todo: visibleTodoItems, posts: visiblePosts }}
+                      />
+                    ))}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

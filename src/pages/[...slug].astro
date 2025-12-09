@@ -5,6 +5,8 @@ import { siteConfig } from '@/config';
 import { shouldShowContent } from '@/utils/markdown';
 import PageLayout from '@/layouts/PageLayout.astro';
 
+export const prerender = true;
+
 export const getStaticPaths: GetStaticPaths = async () => {
   // Get all pages
   const pages = await getCollection('pages');

@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
+import netlify from '@astrojs/netlify';
 import { remarkInternalLinks, remarkFolderImages, remarkImageCaptions } from './src/utils/internallinks.ts';
 import remarkCallouts from './src/utils/remark-callouts.ts';
 import remarkImageGrids from './src/utils/remark-image-grids.ts';
@@ -29,9 +30,10 @@ const DEPLOYMENT_PLATFORM = process.env.DEPLOYMENT_PLATFORM || 'netlify';
 
 export default defineConfig({
   site: siteConfig.site,
-  deployment: {
-    platform: DEPLOYMENT_PLATFORM
-  },
+  output: 'static', // Static mode with dynamic API routes
+  adapter: netlify({
+    edgeMiddleware: false,
+  }),
   devToolbar: {
     enabled: true
   },

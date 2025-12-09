@@ -1,0 +1,112 @@
+---
+import type { Diary } from '@/types';
+import { calculateReadingTime, formatDate, formatDateMobile } from '@/utils/markdown';
+import { optimizePostImagePath } from '@/utils/images';
+import ImageWrapper from './ImageWrapper.astro';
+
+export interface Props {
+  entry: Diary;
+  eager?: boolean;
+}
+
+const { entry, eager = false } = Astro.props;
+const readingTime = calculateReadingTime(entry.body || '');
+---
+
+<article class="group relative border border-primary-200 dark:border-primary-700 rounded-lg bg-primary-50 dark:bg-primary-900 overflow-hidden hover:border-highlight-300 dark:hover:border-highlight-600 transition-all duration-300">
+  <!-- Mood indicator -->
+  {entry.data.mood && (
+    <div class="absolute top-4 right-4 z-10">
+      <span class={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+        entry.data.mood === 'happy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+        entry.data.mood === 'sad' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+        entry.data.mood === 'excited' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+        entry.data.mood === 'stressed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+        entry.data.mood === 'peaceful' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+        'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+      }`}>
+        {entry.data.mood}
+      </span>
+    </div>
+  )}
+
+  <!-- Cover image -->
+  {entry.data.image && (
+    <div class="h-48 overflow-hidden bg-primary-100 dark:bg-primary-800">
+      <ImageWrapper
+        src={entry.data.image}
+        alt={entry.data.imageAlt || `Cover image for diary entry: ${entry.data.title}`}
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        width={800}
+        height={400}
+        format="webp"
+        quality={85}
+        loading={eager ? "eager" : "lazy"}
+        fetchpriority={eager ? "high" : "auto"}
+      />
+    </div>
+  )}
+
+  <!-- Content -->
+  <div class="p-6">
+    <!-- Date and reading time -->
+    <div class="flex items-center text-sm text-primary-600 dark:text-primary-400 mb-3">
+      <time datetime={entry.data.date.toISOString()}>
+        <span class="hidden sm:inline">{formatDate(entry.data.date)}</span>
+        <span class="sm:hidden">{formatDateMobile(entry.data.date)}</span>
+      </time>
+      <span class="mx-2">•</span>
+      <span>{readingTime.text}</span>
+    </div>
+
+    <!-- Title -->
+    <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100 mb-3 group-hover:text-highlight-600 dark:group-hover:text-highlight-400 transition-colors">
+      <a href={`/diary/${entry.id}`} class="block">
+        {entry.data.title}
+      </a>
+    </h2>
+
+    <!-- Description -->
+    {entry.data.description && (
+      <p class="text-primary-700 dark:text-primary-300 mb-4">
+        {entry.data.description}
+      </p>
+    )}
+
+    <!-- Tags -->
+    {entry.data.tags && entry.data.tags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-4">
+        {entry.data.tags.map(tag => (
+          <a
+            href={`/diary?tag=${encodeURIComponent(tag)}`}
+            class="text-xs text-primary-600 dark:text-primary-300 bg-primary-100 dark:bg-primary-800 px-2.5 py-1 rounded-full border border-primary-200 dark:border-primary-700 transition-colors hover:bg-highlight-100 dark:hover:bg-highlight-800"
+          >
+            #{tag}
+          </a>
+        ))}
+      </div>
+    )}
+
+    <!-- Additional metadata -->
+    <div class="flex flex-wrap items-center gap-4 text-sm text-primary-600 dark:text-primary-400">
+      {entry.data.weather && (
+        <div class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4 4 0 003 15z"></path>
+          </svg>
+          <span>{entry.data.weather}</span>
+        </div>
+      )}
+
+      {entry.data.location && (
+        <div class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span>{entry.data.location}</span>
+        </div>
+      )}
+    </div>
+  </div>
+</article>

@@ -54,3 +54,5 @@ public/_headers
 
 # Netlify Log
 *.log
+
+*.py

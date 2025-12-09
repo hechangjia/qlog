@@ -1,0 +1,1157 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { siteConfig } from '@/config';
+
+const pageTitle = '生活总结 | Life Summary';
+const pageDescription = '生成你的周总结、月总结、年度总结，类似网易云音乐和QQ音乐的年度回顾';
+
+const seoData = {
+  title: `${pageTitle} | ${siteConfig.title}`,
+  description: pageDescription,
+  canonical: Astro.url.href,
+  ogType: 'website' as const
+};
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="min-h-screen bg-gradient-to-br from-primary-50 via-highlight-50 to-primary-100 dark:from-primary-950 dark:via-highlight-950 dark:to-primary-900">
+    <div class="container mx-auto px-4 py-12">
+      <!-- Header -->
+      <header class="text-center mb-12">
+        <h1 class="text-5xl font-bold text-primary-900 dark:text-primary-50 mb-4">
+          🎵 生活总结
+        </h1>
+        <p class="text-xl text-primary-700 dark:text-primary-300">
+          用AI为你生成专属的生活回顾卡片
+        </p>
+        <p class="text-sm text-primary-600 dark:text-primary-400 mt-2">
+          类似网易云音乐年度总结，记录你的生活点滴
+        </p>
+      </header>
+
+      <!-- Configuration Card -->
+      <div class="max-w-4xl mx-auto bg-white dark:bg-primary-800 rounded-2xl shadow-2xl p-8 mb-8">
+        <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100 mb-6">
+          ⚙️ 配置总结
+        </h2>
+
+        <div class="space-y-6">
+          <!-- Time Period Selection -->
+          <div>
+            <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              选择时间段
+            </label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button
+                onclick="selectPeriod('week')"
+                id="btn-week"
+                class="period-btn py-3 px-4 rounded-lg border-2 border-primary-300 dark:border-primary-600 text-primary-800 dark:text-primary-200 hover:border-highlight-500 hover:bg-highlight-50 dark:hover:bg-highlight-900 transition-all duration-200"
+              >
+                <span class="block text-2xl mb-1">📅</span>
+                <span class="block text-sm font-medium">周总结</span>
+                <span class="block text-xs opacity-75">Past Week</span>
+              </button>
+
+              <button
+                onclick="selectPeriod('month')"
+                id="btn-month"
+                class="period-btn py-3 px-4 rounded-lg border-2 border-primary-300 dark:border-primary-600 text-primary-800 dark:text-primary-200 hover:border-highlight-500 hover:bg-highlight-50 dark:hover:bg-highlight-900 transition-all duration-200"
+              >
+                <span class="block text-2xl mb-1">🗓️</span>
+                <span class="block text-sm font-medium">月总结</span>
+                <span class="block text-xs opacity-75">Past Month</span>
+              </button>
+
+              <button
+                onclick="selectPeriod('10n')"
+                id="btn-10n"
+                class="period-btn py-3 px-4 rounded-lg border-2 border-primary-300 dark:border-primary-600 text-primary-800 dark:text-primary-200 hover:border-highlight-500 hover:bg-highlight-50 dark:hover:bg-highlight-900 transition-all duration-200"
+              >
+                <span class="block text-2xl mb-1">🔢</span>
+                <span class="block text-sm font-medium">10n天</span>
+                <span class="block text-xs opacity-75">Custom Days</span>
+              </button>
+
+              <button
+                onclick="selectPeriod('year')"
+                id="btn-year"
+                class="period-btn py-3 px-4 rounded-lg border-2 border-primary-300 dark:border-primary-600 text-primary-800 dark:text-primary-200 hover:border-highlight-500 hover:bg-highlight-50 dark:hover:bg-highlight-900 transition-all duration-200"
+              >
+                <span class="block text-2xl mb-1">🎊</span>
+                <span class="block text-sm font-medium">年度总结</span>
+                <span class="block text-xs opacity-75">Past Year</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom N for 10n days -->
+          <div id="custom-n-input" class="hidden">
+            <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              10n天中的n值 (如n=3表示过去30天)
+            </label>
+            <input
+              type="number"
+              id="n-value"
+              value="1"
+              min="1"
+              max="36"
+              class="w-full px-4 py-2 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100"
+              placeholder="输入n值"
+            />
+          </div>
+
+          <!-- API Keys -->
+          <div>
+            <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              DeepSeek API Key <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              id="deepseek-api-key"
+              class="w-full px-4 py-2 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100"
+              placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            />
+            <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+              用于生成AI分析和总结 | <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" class="text-highlight-600 hover:text-highlight-700 underline">获取API Key</a>
+            </p>
+            <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+              <strong>提示：</strong> API Key格式为 <code class="bg-blue-100 dark:bg-blue-800 px-1 py-0.5 rounded">sk-</code> 开头
+            </div>
+          </div>
+
+          <!-- Image Generation Option -->
+          <div class="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="include-image"
+              class="w-5 h-5 text-highlight-600 border-primary-300 rounded focus:ring-highlight-500"
+            />
+            <label for="include-image" class="text-sm font-medium text-primary-700 dark:text-primary-300">
+              生成可视化卡片图片 (需要z-image-turbo API Key)
+            </label>
+          </div>
+
+          <div id="z-image-key-input" class="hidden">
+            <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              z-image-turbo API Key
+            </label>
+            <input
+              type="password"
+              id="zimage-api-key"
+              class="w-full px-4 py-2 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100"
+              placeholder="输入z-image-turbo API Key"
+            />
+            <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+              用于生成总结卡片图片 | <a href="https://ai.gitee.com" target="_blank" class="text-highlight-600 hover:text-highlight-700">获取API Key</a>
+            </p>
+
+            <!-- Image Count Selection -->
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                生成图片数量 (1-4张)
+              </label>
+              <input
+                type="number"
+                id="image-count"
+                value="2"
+                min="1"
+                max="4"
+                class="w-full px-4 py-2 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100"
+                placeholder="输入图片数量（1-4）"
+              />
+              <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+                每张图片都将结合歌词、名句和风景，呈现不同视角的总结
+              </p>
+            </div>
+          </div>
+
+          <!-- Generate Button -->
+          <button
+            id="generate-btn"
+            onclick="generateSummary()"
+            class="w-full py-4 px-6 bg-gradient-to-r from-highlight-500 to-highlight-600 hover:from-highlight-600 hover:to-highlight-700 text-white font-bold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            🚀 生成我的总结
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading" class="hidden max-w-4xl mx-auto bg-white dark:bg-primary-800 rounded-2xl shadow-2xl p-12 text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-highlight-600 mx-auto mb-4"></div>
+        <p class="text-lg font-medium text-primary-900 dark:text-primary-100">
+          正在生成你的专属总结...
+        </p>
+        <p class="text-sm text-primary-600 dark:text-primary-400 mt-2">
+          这可能需要几秒钟，请稍候
+        </p>
+      </div>
+
+      <!-- Results Card -->
+      <div id="results" class="hidden max-w-4xl mx-auto bg-white dark:bg-primary-800 rounded-2xl shadow-2xl p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-3xl font-bold text-primary-900 dark:text-primary-100">
+            🎉 你的生活总结
+          </h2>
+          <button
+            onclick="resetForm()"
+            class="text-sm text-primary-600 dark:text-primary-400 hover:text-highlight-600 dark:hover:text-highlight-400"
+          >
+            重新生成
+          </button>
+        </div>
+
+        <!-- Statistics Summary -->
+        <div id="stats-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- AI Analysis -->
+        <div id="ai-analysis" class="prose dark:prose-invert max-w-none mb-6 p-6 bg-primary-50 dark:bg-primary-900 rounded-lg">
+          <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- Regenerate Summary Button -->
+        <div class="mb-6 text-center">
+          <button
+            onclick="regenerateSummary()"
+            class="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+          >
+            🔄 重新生成总结
+          </button>
+        </div>
+
+        <!-- Image Generation Section -->
+        <div id="image-generation-section" class="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border-2 border-purple-200 dark:border-purple-700">
+          <h3 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">
+            📸 生成图片卡片（可选）
+          </h3>
+
+          <div class="space-y-4">
+            <!-- z-image API Key -->
+            <div>
+              <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                z-image-turbo API Key
+              </label>
+              <input
+                type="password"
+                id="image-gen-api-key"
+                class="w-full px-4 py-2 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100"
+                placeholder="输入z-image-turbo API Key"
+              />
+              <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+                用于生成总结卡片图片 | <a href="https://ai.gitee.com" target="_blank" class="text-highlight-600 hover:text-highlight-700">获取API Key</a>
+              </p>
+            </div>
+
+            <!-- Image Count -->
+            <div>
+              <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                生成图片数量 (1-4张)
+              </label>
+              <input
+                type="number"
+                id="image-gen-count"
+                value="2"
+                min="1"
+                max="4"
+                class="w-full px-4 py-2 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100"
+              />
+              <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+                每张图片都将结合歌词、名句和风景，呈现不同视角的总结
+              </p>
+            </div>
+
+            <!-- Prompt Mode Selection -->
+            <div class="border-t border-primary-200 dark:border-primary-700 pt-4">
+              <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-3">
+                📝 图片提示词设置
+              </label>
+
+              <div class="space-y-3">
+                <!-- Radio buttons for prompt mode -->
+                <div class="flex items-start space-x-3">
+                  <input
+                    type="radio"
+                    id="use-ai-prompt"
+                    name="prompt-mode"
+                    value="ai"
+                    checked
+                    onchange="togglePromptMode()"
+                    class="mt-1 w-4 h-4 text-purple-600 border-primary-300 focus:ring-purple-500"
+                  />
+                  <div class="flex-1">
+                    <label for="use-ai-prompt" class="text-sm font-medium text-primary-800 dark:text-primary-200 cursor-pointer">
+                      🤖 使用AI自动生成提示词
+                    </label>
+                    <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+                      AI将基于您的总结内容，自动生成富有诗意、结合歌词和风景的提示词
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-start space-x-3">
+                  <input
+                    type="radio"
+                    id="use-custom-prompt"
+                    name="prompt-mode"
+                    value="custom"
+                    onchange="togglePromptMode()"
+                    class="mt-1 w-4 h-4 text-purple-600 border-primary-300 focus:ring-purple-500"
+                  />
+                  <div class="flex-1">
+                    <label for="use-custom-prompt" class="text-sm font-medium text-primary-800 dark:text-primary-200 cursor-pointer">
+                      ✏️ 自定义提示词
+                    </label>
+                    <p class="text-xs text-primary-600 dark:text-primary-400 mt-1">
+                      完全自定义图片生成的提示词，发挥您的创意
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom Prompt Input (hidden by default) -->
+              <div id="custom-prompt-container" class="hidden mt-4">
+                <label class="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                  自定义提示词
+                </label>
+                <textarea
+                  id="custom-prompt-input"
+                  rows="6"
+                  class="w-full px-4 py-3 border border-primary-300 dark:border-primary-600 rounded-lg bg-white dark:bg-primary-900 text-primary-900 dark:text-primary-100 font-mono text-sm resize-y"
+                  placeholder="请输入图片生成提示词，例如：&#10;&#10;一幅唯美的总结卡片，画面中央是温暖的渐变背景，从日出的金黄色过渡到天空的浅蓝色。前景是一座宁静的山川湖泊，远处有飘渺的云雾。画面上优雅地展示统计数据，用现代简约的图标和数字呈现。顶部用书法字体写着一句契合主题的诗句：'山高水长，岁月静好'。整体风格温馨而富有艺术感，类似音乐流媒体的年度总结卡片。"
+                ></textarea>
+                <p class="text-xs text-primary-600 dark:text-primary-400 mt-2">
+                  💡 提示：描述越详细，生成的图片效果越好。可以包含：风景、色调、情绪、歌词/诗句、统计数据的呈现方式等
+                </p>
+              </div>
+
+              <!-- AI Generated Prompt Preview (will be populated after generation) -->
+              <div id="ai-prompt-preview" class="hidden mt-4">
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-sm font-medium text-primary-700 dark:text-primary-300">
+                    🤖 AI生成的提示词预览
+                  </label>
+                  <button
+                    onclick="copyPromptToClipboard()"
+                    class="text-xs px-3 py-1 bg-primary-100 hover:bg-primary-200 dark:bg-primary-700 dark:hover:bg-primary-600 text-primary-700 dark:text-primary-200 rounded transition-colors"
+                  >
+                    📋 复制
+                  </button>
+                </div>
+                <div
+                  id="ai-prompt-content"
+                  class="w-full px-4 py-3 border border-primary-300 dark:border-primary-600 rounded-lg bg-primary-50 dark:bg-primary-900/50 text-primary-800 dark:text-primary-200 text-sm max-h-40 overflow-y-auto"
+                >
+                  <!-- AI prompt will be displayed here -->
+                </div>
+                <p class="text-xs text-primary-600 dark:text-primary-400 mt-2">
+                  💡 提示：AI会为每张图片基于此提示词生成不同风格的变体
+                </p>
+              </div>
+            </div>
+
+            <!-- Generate Images Button -->
+            <button
+              onclick="generateImages()"
+              class="w-full py-3 px-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
+            >
+              🎨 生成图片卡片
+            </button>
+          </div>
+        </div>
+
+        <!-- Image Loading State -->
+        <div id="image-loading" class="hidden mb-6 p-6 text-center bg-white dark:bg-primary-800 rounded-xl border border-primary-200 dark:border-primary-700">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-600 mx-auto mb-4"></div>
+          <p class="text-lg font-medium text-primary-900 dark:text-primary-100">
+            正在生成图片...
+          </p>
+          <p class="text-sm text-primary-600 dark:text-primary-400 mt-2" id="image-progress">
+            生成第 1 张...
+          </p>
+        </div>
+
+        <!-- Generated Images Gallery -->
+        <div id="generated-image" class="hidden">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-primary-900 dark:text-primary-100">
+              📸 你的专属卡片 (<span id="image-count-display">0</span>张)
+            </h3>
+            <button
+              onclick="regenerateImages()"
+              class="text-sm px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+            >
+              🔄 重新生成图片
+            </button>
+          </div>
+
+          <!-- Images Grid -->
+          <div id="images-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Images will be populated dynamically -->
+          </div>
+
+          <!-- Download All Button -->
+          <div class="text-center">
+            <button
+              onclick="downloadAllImages()"
+              class="px-6 py-3 bg-highlight-500 hover:bg-highlight-600 text-white font-medium rounded-lg transition-colors"
+            >
+              💾 下载全部图片
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div id="error" class="hidden max-w-4xl mx-auto bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6">
+        <div class="flex items-start">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div>
+            <h3 class="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
+              生成失败
+            </h3>
+            <p id="error-message" class="text-sm text-red-700 dark:text-red-300">
+              <!-- Error message will be populated dynamically -->
+            </p>
+            <button
+              onclick="resetForm()"
+              class="mt-4 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 underline"
+            >
+              重试
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    let selectedPeriod = 'week';
+
+    // Global state management
+    let currentSummaryData = null;
+    let currentAnalysis = null;
+    let currentImagePrompt = null;
+    let generatedImages = [];
+    let currentDeepseekApiKey = '';
+    let currentZImageApiKey = '';
+
+    function selectPeriod(period) {
+      selectedPeriod = period;
+
+      // Update button styles
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('border-highlight-500', 'bg-highlight-100', 'dark:bg-highlight-900');
+        btn.classList.add('border-primary-300', 'dark:border-primary-600');
+      });
+
+      const selectedBtn = document.getElementById(`btn-${period}`);
+      selectedBtn.classList.add('border-highlight-500', 'bg-highlight-100', 'dark:bg-highlight-900');
+      selectedBtn.classList.remove('border-primary-300', 'dark:border-primary-600');
+
+      // Show/hide custom n input
+      const customInput = document.getElementById('custom-n-input');
+      if (period === '10n') {
+        customInput.classList.remove('hidden');
+      } else {
+        customInput.classList.add('hidden');
+      }
+    }
+
+    // Initialize with week selected
+    selectPeriod('week');
+
+    // Toggle z-image API key input
+    document.getElementById('include-image').addEventListener('change', function(e) {
+      const zImageInput = document.getElementById('z-image-key-input');
+      if (e.target.checked) {
+        zImageInput.classList.remove('hidden');
+      } else {
+        zImageInput.classList.add('hidden');
+      }
+    });
+
+    async function generateSummary() {
+      console.log('=== generateSummary function called ===');
+      const deepseekApiKey = document.getElementById('deepseek-api-key').value.trim();
+      const includeImage = document.getElementById('include-image').checked;
+      const zImageApiKey = document.getElementById('zimage-api-key').value.trim();
+      const nValue = parseInt(document.getElementById('n-value').value) || 1;
+
+      console.log('Input values:', {
+        hasDeepseekKey: !!deepseekApiKey,
+        keyPrefix: deepseekApiKey.substring(0, 5) + '...',
+        includeImage,
+        hasZImageKey: !!zImageApiKey,
+        nValue,
+        selectedPeriod
+      });
+
+      // Validation
+      if (!deepseekApiKey) {
+        console.error('Validation: Missing DeepSeek API Key');
+        showError('请输入DeepSeek API Key');
+        return;
+      }
+
+      // Validate API Key format (should start with sk-)
+      if (!deepseekApiKey.startsWith('sk-')) {
+        console.error('Validation: Invalid API Key format');
+        showError('DeepSeek API Key格式不正确，应该以"sk-"开头');
+        return;
+      }
+
+      if (includeImage && !zImageApiKey) {
+        console.error('Validation: Image generation enabled but no z-image key');
+        showError('勾选生成图片需要输入z-image-turbo API Key');
+        return;
+      }
+
+      console.log('✅ Validation passed');
+
+      // Hide all sections and show loading with detailed message
+      hideAll();
+      const loadingEl = document.getElementById('loading');
+      loadingEl.classList.remove('hidden');
+      loadingEl.innerHTML = `
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-highlight-600"></div>
+          <p class="mt-4 text-lg font-medium text-primary-700 dark:text-primary-300">正在生成总结...</p>
+          <p class="mt-2 text-sm text-primary-600 dark:text-primary-400">第1步: 获取数据</p>
+        </div>
+      `;
+
+      try {
+        // First, get the summary data from our API
+        console.log('📊 Step 1: Fetching summary data from /api/music-summary.json');
+        loadingEl.innerHTML = `
+          <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-highlight-600"></div>
+            <p class="mt-4 text-lg font-medium text-primary-700 dark:text-primary-300">正在生成总结...</p>
+            <p class="mt-2 text-sm text-primary-600 dark:text-primary-400">第1步: 获取数据中...</p>
+          </div>
+        `;
+
+        const summaryResponse = await fetch(`/api/music-summary.json?period=${selectedPeriod}&n=${nValue}`);
+        console.log('Summary response status:', summaryResponse.status, summaryResponse.statusText);
+
+        if (!summaryResponse.ok) {
+          const errorText = await summaryResponse.text();
+          console.error('Summary fetch error:', errorText);
+          throw new Error(`Failed to fetch summary data: ${summaryResponse.status} ${summaryResponse.statusText}`);
+        }
+
+        const summaryData = await summaryResponse.json();
+        console.log('✅ Summary data fetched successfully:', {
+          totalDiaryEntries: summaryData.statistics?.totalDiaryEntries,
+          totalTodos: summaryData.statistics?.totalTodos,
+          hasDiaryEntries: summaryData.diaryEntries?.length > 0
+        });
+
+        // Call DeepSeek API to generate analysis
+        console.log('🤖 Step 2: Calling DeepSeek API...');
+        loadingEl.innerHTML = `
+          <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-highlight-600"></div>
+            <p class="mt-4 text-lg font-medium text-primary-700 dark:text-primary-300">正在生成总结...</p>
+            <p class="mt-2 text-sm text-primary-600 dark:text-primary-400">第2步: AI分析中（这可能需要10-30秒）...</p>
+          </div>
+        `;
+
+        const deepseekPayload = {
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: '你是一位富有创意的生活总结生成器。以音乐流媒体平台年度总结的风格，生成中文个性化总结，包含创意洞察和激励话语，多用emoji。',
+            },
+            {
+              role: 'user',
+              content: `生成${selectedPeriod === 'week' ? '周' : selectedPeriod === 'month' ? '月' : selectedPeriod === 'year' ? '年度' : `${10 * nValue}天`}总结：\n` +
+                `📖 博客${summaryData.statistics.totalPosts}篇 📝 日记${summaryData.statistics.totalDiaryEntries}篇 📊 ${summaryData.statistics.totalWords}字\n` +
+                `😊 心情：${summaryData.moods.dominantMood || '平静'} 🏷️ 标签：${summaryData.tags.topTags.join('、') || '无'}\n` +
+                `✅ 待办：${summaryData.statistics.completedTodos}/${summaryData.statistics.totalTodos}\n\n` +
+                '包含：1.主题/氛围 2.亮点时刻 3.成长感悟 4.未来建议 5.契合的歌词/诗句',
+            },
+          ],
+          max_tokens: 1500,
+          temperature: 0.7,
+        };
+
+        console.log('DeepSeek API request payload:', {
+          messageCount: deepseekPayload.messages.length,
+          max_tokens: deepseekPayload.max_tokens,
+          temperature: deepseekPayload.temperature,
+          promptLength: deepseekPayload.messages[1]?.content?.length
+        });
+
+        // Call our server-side API proxy instead of directly calling DeepSeek
+        let deepseekResponse;
+        let retryCount = 0;
+        const maxRetries = 2;
+        let lastError = null;
+
+        while (retryCount <= maxRetries) {
+          try {
+            console.log(`📡 Sending request to /api/deepseek-chat (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+            console.log('Request body preview:', {
+              hasApiKey: !!deepseekApiKey,
+              apiKeyLength: deepseekApiKey.length,
+              messageCount: deepseekPayload.messages.length
+            });
+
+            const fetchStartTime = Date.now();
+            // 使用AbortController设置30秒超时
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            deepseekResponse = await fetch('/api/deepseek-chat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                apiKey: deepseekApiKey,
+                messages: deepseekPayload.messages,
+                max_tokens: deepseekPayload.max_tokens,
+                temperature: deepseekPayload.temperature,
+              }),
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            const fetchDuration = Date.now() - fetchStartTime;
+            console.log(`✅ Fetch completed in ${fetchDuration}ms, status: ${deepseekResponse.status}`);
+            // 如果响应成功，跳出循环
+            if (deepseekResponse.ok) {
+              break;
+            } else {
+              // 如果响应不是2xx，抛出错误
+              throw new Error(`HTTP error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
+            }
+          } catch (fetchError) {
+            console.error(`❌ Server API fetch error (attempt ${retryCount + 1}):`, fetchError);
+            lastError = fetchError;
+            retryCount++;
+            if (retryCount <= maxRetries) {
+              // 等待1秒后重试
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
+
+        // 如果重试后仍然失败，抛出错误
+        if (!deepseekResponse || !deepseekResponse.ok) {
+          throw new Error(`请求失败: ${lastError ? lastError.message : '未知错误'}`);
+        }
+
+        console.log('📥 Server API response status:', deepseekResponse.status, deepseekResponse.statusText);
+
+        let responseData;
+        try {
+          const responseText = await deepseekResponse.text();
+          console.log('Response text length:', responseText.length);
+          console.log('Response preview:', responseText.substring(0, 200));
+
+          responseData = JSON.parse(responseText);
+          console.log('✅ Response parsed successfully:', {
+            success: responseData.success,
+            hasData: !!responseData.data,
+            hasError: !!responseData.error,
+            hasChoices: !!responseData.data?.choices,
+            choicesCount: responseData.data?.choices?.length
+          });
+        } catch (parseError) {
+          console.error('❌ Failed to parse JSON response:', parseError);
+          throw new Error(`服务器返回了无效的响应格式: ${parseError.message}`);
+        }
+
+        if (!responseData.success) {
+          console.error('❌ API returned error:', {
+            error: responseData.error,
+            details: responseData.details,
+            fullResponse: responseData
+          });
+          throw new Error(responseData.error || '调用DeepSeek API失败');
+        }
+
+        console.log('✅ API call successful, extracting analysis...');
+        const analysis = responseData.data?.choices?.[0]?.message?.content;
+
+        console.log('Analysis result:', {
+          hasAnalysis: !!analysis,
+          analysisLength: analysis?.length,
+          preview: analysis?.substring(0, 100)
+        });
+
+        if (!analysis) {
+          console.error('❌ No analysis content in response');
+          throw new Error('DeepSeek API返回了空的分析结果');
+        }
+
+        console.log('✅ Analysis extracted successfully');
+
+
+        // Store data in global state for later use
+        currentSummaryData = summaryData;
+        currentAnalysis = analysis;
+        currentDeepseekApiKey = deepseekApiKey;
+
+        // Prepare response data (without images)
+        const finalResponseData = {
+          ...summaryData,
+          analysis,
+          generatedAt: new Date().toISOString(),
+        };
+
+        console.log('✅ Displaying results...');
+        displayResults(finalResponseData);
+
+      } catch (error) {
+        console.error('❌ Error in generateSummary:', error);
+        console.error('Error stack:', error.stack);
+        showError(error.message || '生成总结时发生错误，请检查控制台查看详细信息');
+      } finally {
+        console.log('=== generateSummary completed ===');
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    function displayResults(data) {
+      console.log('📊 Displaying results with data:', {
+        hasDiaryEntries: !!data.statistics,
+        hasAnalysis: !!data.analysis,
+        analysisLength: data.analysis?.length
+      });
+      // Populate statistics
+      const statsContainer = document.getElementById('stats-summary');
+      statsContainer.innerHTML = `
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+          <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">${data.statistics.totalDiaryEntries}</div>
+          <div class="text-sm text-primary-700 dark:text-primary-300">日记条目</div>
+        </div>
+        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+          <div class="text-2xl font-bold text-green-600 dark:text-green-400">${data.statistics.completedTodos}</div>
+          <div class="text-sm text-primary-700 dark:text-primary-300">完成任务</div>
+        </div>
+        <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+          <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${data.statistics.totalWords}</div>
+          <div class="text-sm text-primary-700 dark:text-primary-300">总字数</div>
+        </div>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+          <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">${data.statistics.completionRate}%</div>
+          <div class="text-sm text-primary-700 dark:text-primary-300">完成率</div>
+        </div>
+      `;
+
+      // Display AI analysis (convert markdown-like formatting to HTML)
+      const analysisContainer = document.getElementById('ai-analysis');
+      analysisContainer.innerHTML = data.analysis.replace(/\n/g, '<br>');
+
+      // Show results section
+      console.log('✅ Showing results section');
+      document.getElementById('results').classList.remove('hidden');
+
+      // Scroll to results
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function showError(message) {
+      console.error('🚨 Showing error to user:', message);
+      const errorEl = document.getElementById('error');
+      const errorMessageEl = document.getElementById('error-message');
+
+      errorMessageEl.innerHTML = `
+        <div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 rounded-lg p-6">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-3 flex-1">
+              <h3 class="text-lg font-medium text-red-800 dark:text-red-200">发生错误</h3>
+              <div class="mt-2 text-sm text-red-700 dark:text-red-300">${message}</div>
+              <div class="mt-4">
+                <button onclick="hideAll()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm">
+                  关闭
+                </button>
+                <button onclick="console.clear(); alert('控制台已清除')" class="ml-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md text-sm">
+                  清除控制台
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      errorEl.classList.remove('hidden');
+      errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Also show an alert for immediate attention
+      setTimeout(() => {
+        alert(`错误：${message}\n\n请查看控制台(F12)获取详细信息`);
+      }, 300);
+    }
+
+    function hideAll() {
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('error').classList.add('hidden');
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    function resetForm() {
+      hideAll();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function shareImage() {
+      const imageUrl = document.getElementById('summary-image').src;
+      if (navigator.share) {
+        navigator.share({
+          title: '我的生活总结',
+          text: '看看我的生活总结！',
+          url: imageUrl,
+        });
+      } else {
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(imageUrl);
+        alert('图片链接已复制到剪贴板！');
+      }
+    }
+
+    // Regenerate summary with existing data
+    function regenerateSummary() {
+      if (!currentDeepseekApiKey) {
+        showError('请先生成初始总结');
+        return;
+      }
+
+      // Hide results and regenerate
+      document.getElementById('results').classList.add('hidden');
+      generateSummary();
+    }
+
+    // Generate images based on current summary
+    async function generateImages() {
+      const apiKey = document.getElementById('image-gen-api-key').value.trim();
+      const imageCount = parseInt(document.getElementById('image-gen-count').value) || 2;
+      const promptMode = document.querySelector('input[name="prompt-mode"]:checked').value;
+
+      // Validation
+      if (!apiKey) {
+        showError('请输入z-image-turbo API Key');
+        return;
+      }
+
+      if (!currentSummaryData || !currentAnalysis) {
+        showError('请先生成总结');
+        return;
+      }
+
+      if (imageCount < 1 || imageCount > 4) {
+        showError('图片数量应在1-4之间');
+        return;
+      }
+
+      // Store API key for regeneration
+      currentZImageApiKey = apiKey;
+
+      // Hide previous images
+      document.getElementById('generated-image').classList.add('hidden');
+
+      try {
+        console.log('Starting image generation...');
+
+        let baseImagePrompt = '';
+
+        // Check prompt mode: AI or Custom
+        if (promptMode === 'custom') {
+          // Use custom prompt
+          baseImagePrompt = document.getElementById('custom-prompt-input').value.trim();
+
+          if (!baseImagePrompt) {
+            showError('请输入自定义提示词');
+            return;
+          }
+
+          console.log('Using custom prompt:', baseImagePrompt);
+          currentImagePrompt = baseImagePrompt;
+
+          // Hide AI prompt preview when using custom
+          document.getElementById('ai-prompt-preview').classList.add('hidden');
+
+        } else {
+          // Generate prompt using AI
+          console.log('Generating AI prompt...');
+
+          // Show loading
+          document.getElementById('image-loading').classList.remove('hidden');
+          document.getElementById('image-progress').textContent = '正在生成AI提示词...';
+
+          const nValue = selectedPeriod === '10n' ? (parseInt(document.getElementById('n-value').value) || 1) : 1;
+
+          const imagePromptPayload = {
+            model: 'deepseek-chat',
+            messages: [
+              {
+                role: 'system',
+                content: '你是图像提示词生成专家。创作结合歌词、诗句、名言和风景的视觉卡片描述，富有诗意和艺术感。',
+              },
+              {
+                role: 'user',
+                content: `创作${selectedPeriod === 'week' ? '周' : selectedPeriod === 'month' ? '月' : selectedPeriod === 'year' ? '年度' : `${10 * nValue}天`}总结卡片图像描述：\n` +
+                  `心情：${currentSummaryData.moods.dominantMood || '平静'} 数据：${currentSummaryData.statistics.totalDiaryEntries}篇日记，${currentSummaryData.statistics.completedTodos}/${currentSummaryData.statistics.totalTodos}待办\n` +
+                  `关键词：${currentSummaryData.tags.topTags.join('、')}\n\n` +
+                  `要求：融入风景（山川/湖泊/星空/日出日落）、契合主题的歌词/诗句（书法字体）、与心情相配的色调、艺术化统计数据呈现、音乐流媒体年度总结风格、有层次感和故事性。\n` +
+                  `只提供中文图像生成提示词，一段完整流畅描述。`,
+              },
+            ],
+            max_tokens: 250,
+            temperature: 0.7,
+          };
+
+          const imagePromptResponse = await fetch('/api/deepseek-chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              apiKey: currentDeepseekApiKey,
+              messages: imagePromptPayload.messages,
+              max_tokens: imagePromptPayload.max_tokens,
+              temperature: imagePromptPayload.temperature,
+            }),
+          });
+
+          const imagePromptResult = await imagePromptResponse.json();
+
+          if (!imagePromptResult.success) {
+            throw new Error('生成图片提示词失败：' + imagePromptResult.error);
+          }
+
+          baseImagePrompt = imagePromptResult.data?.choices?.[0]?.message?.content || '';
+          console.log('Generated base image prompt:', baseImagePrompt);
+
+          if (!baseImagePrompt) {
+            throw new Error('未能生成图片提示词');
+          }
+
+          // Store and display the AI prompt
+          currentImagePrompt = baseImagePrompt;
+          document.getElementById('ai-prompt-content').textContent = baseImagePrompt;
+          document.getElementById('ai-prompt-preview').classList.remove('hidden');
+        }
+
+        // Show loading for image generation
+        document.getElementById('image-loading').classList.remove('hidden');
+        document.getElementById('image-progress').textContent = `生成第 1/${imageCount} 张...`;
+
+        // Generate multiple images with style variations
+        const styleVariations = [
+          '诗意朦胧的水墨画风格，柔和光线，意境深远',
+          '明亮清新的风格，清晨阳光，活力四射，色彩鲜艳',
+          '温暖怀旧的复古色调，温馨回忆，岁月静好',
+          '梦幻唯美的星空风格，浪漫光效，超现实美感'
+        ];
+
+        generatedImages = [];
+
+        for (let i = 0; i < imageCount; i++) {
+          try {
+            // Update progress
+            document.getElementById('image-progress').textContent = `生成第 ${i + 1}/${imageCount} 张...`;
+
+            // Create varied prompt for this image
+            const styleVariation = styleVariations[i % 4];
+            const variedPrompt = `${baseImagePrompt}\n\n风格：${styleVariation}`;
+
+            console.log(`Generating image ${i + 1}/${imageCount}...`);
+
+            const zImageResponse = await fetch('/api/zimage-generate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                apiKey: apiKey,
+                prompt: variedPrompt,
+                size: '1024x1024',
+                num_inference_steps: 9,
+              }),
+            });
+
+            const zImageResult = await zImageResponse.json();
+            console.log(`Image ${i + 1} server response:`, zImageResult);
+
+            if (zImageResult.success && zImageResult.data) {
+              const imageUrl = zImageResult.data.data?.[0]?.url || zImageResult.data.data?.[0]?.b64_json;
+
+              if (imageUrl) {
+                const finalImageUrl = imageUrl.startsWith('data:') || imageUrl.startsWith('http')
+                  ? imageUrl
+                  : `data:image/jpeg;base64,${imageUrl}`;
+
+                generatedImages.push({
+                  url: finalImageUrl,
+                  index: i + 1,
+                  style: styleVariation,
+                  prompt: variedPrompt,
+                });
+                console.log(`Image ${i + 1} generated successfully`);
+              } else {
+                console.warn(`No image URL in response for image ${i + 1}`);
+              }
+            } else {
+              console.error(`Image ${i + 1} generation error:`, zImageResult.error);
+            }
+          } catch (error) {
+            console.error(`Failed to generate image ${i + 1}:`, error);
+          }
+        }
+
+        // Hide loading
+        document.getElementById('image-loading').classList.add('hidden');
+
+        if (generatedImages.length > 0) {
+          displayImages();
+        } else {
+          throw new Error('未能生成任何图片，请重试');
+        }
+
+      } catch (error) {
+        console.error('Error in generateImages:', error);
+        document.getElementById('image-loading').classList.add('hidden');
+        showError(error.message || '生成图片时发生错误，请重试');
+      }
+    }
+
+    // Regenerate images with current settings
+    function regenerateImages() {
+      if (!currentZImageApiKey) {
+        showError('请先生成初始图片');
+        return;
+      }
+
+      // Use stored API key
+      document.getElementById('image-gen-api-key').value = currentZImageApiKey;
+      generateImages();
+    }
+
+    // Display generated images in gallery
+    function displayImages() {
+      const imageSection = document.getElementById('generated-image');
+      const imagesGrid = document.getElementById('images-grid');
+      const imageCountDisplay = document.getElementById('image-count-display');
+
+      // Update count
+      imageCountDisplay.textContent = generatedImages.length;
+
+      // Clear previous images
+      imagesGrid.innerHTML = '';
+
+      // Add each image to the grid
+      generatedImages.forEach((img, index) => {
+        const imageCard = document.createElement('div');
+        imageCard.className = 'relative group';
+        imageCard.innerHTML = `
+          <img
+            src="${img.url}"
+            alt="生活总结卡片 ${img.index}"
+            class="w-full h-auto rounded-lg shadow-lg"
+          />
+          <div class="mt-3 flex items-center justify-between">
+            <span class="text-sm text-primary-600 dark:text-primary-400">
+              第 ${img.index} 张 - ${img.style.substring(0, 12)}...
+            </span>
+            <a
+              href="${img.url}"
+              download="summary-card-${img.index}.png"
+              class="text-sm px-3 py-1 bg-highlight-500 hover:bg-highlight-600 text-white rounded transition-colors"
+            >
+              💾 下载
+            </a>
+          </div>
+        `;
+        imagesGrid.appendChild(imageCard);
+      });
+
+      // Show the image section
+      imageSection.classList.remove('hidden');
+    }
+
+    // Download all images
+    function downloadAllImages() {
+      generatedImages.forEach((img, index) => {
+        const link = document.createElement('a');
+        link.href = img.url;
+        link.download = `summary-card-${img.index}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
+    // Toggle between AI and custom prompt mode
+    function togglePromptMode() {
+      const promptMode = document.querySelector('input[name="prompt-mode"]:checked').value;
+      const customContainer = document.getElementById('custom-prompt-container');
+
+      if (promptMode === 'custom') {
+        customContainer.classList.remove('hidden');
+      } else {
+        customContainer.classList.add('hidden');
+      }
+    }
+
+    // Copy AI prompt to clipboard
+    function copyPromptToClipboard() {
+      const promptText = document.getElementById('ai-prompt-content').textContent;
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        // Show feedback
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = '✓ 已复制';
+
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('复制失败，请手动复制');
+      });
+    }
+  </script>
+
+  <style>
+    .period-btn {
+      transition: all 0.2s ease;
+    }
+
+    .period-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .prose {
+      line-height: 1.8;
+    }
+
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</BaseLayout>

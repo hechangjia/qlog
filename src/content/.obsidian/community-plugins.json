@@ -21,5 +21,11 @@
   "bases-cms",
   "oxygen-settings",
   "astro-modular-settings",
-  "obsidian42-brat"
+  "obsidian42-brat",
+  "dataview",
+  "templater-obsidian",
+  "recent-files-obsidian",
+  "obsidian-advanced-slides",
+  "obsidian-excalidraw-plugin",
+  "calendar"
 ]

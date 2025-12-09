@@ -22,6 +22,8 @@ aliases:
 ---
 ![Vault CMS logo](attachments/vault-cms-cover.png)
 
+
+
 ## Overview
 
 All plugins, key bindings, and the theme can be customized to your liking, but this is what's on by default.
@@ -33,6 +35,7 @@ All plugins, key bindings, and the theme can be customized to your liking, but t
 3. Visual parity between backend and frontend.
 
 ## Default Settings
+
 
 1. Markdown links are used in favor of wikilinks.
 2. Default location for new notes is the `posts` folder.

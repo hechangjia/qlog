@@ -41,10 +41,14 @@ function extractImagePath(image: string): string {
   return image;
 }
 
-// Generate SEO data for posts
-export function generatePostSEO(post: Post, url: string): SEOData {
-  const { title, description, image, imageOG, tags, date } = post.data;
-
+// Generic function to generate SEO data for any content type
+export function generateContentSEO(content: Post | Page | Project | Docs | any, url: string, contentType: 'post' | 'page' | 'project' | 'docs' | 'diary' | 'todo' = 'post'): SEOData {
+  // Use content as 'post' for compatibility with existing code
+  const post = content as Post;
+  const { title, description, image, tags, date } = post.data;
+  // Check for imageOG for posts, for other content types use image if available
+  const imageOG = contentType === 'post' ? post.data.imageOG : (image ? true : false);
+  
   let ogImage: OpenGraphImage | undefined;
 
   if (image && imageOG) {
@@ -68,7 +72,7 @@ export function generatePostSEO(post: Post, url: string): SEOData {
     }
     ogImage = {
       url: imageUrl,
-      alt: post.data.imageAlt || `Featured image for post: ${title}`,
+      alt: post.data.imageAlt || `Featured image for ${contentType}: ${title}`,
       width: 1200,
       height: 630,
     };
@@ -81,17 +85,43 @@ export function generatePostSEO(post: Post, url: string): SEOData {
     };
   }
 
-  return {
-    title: `${title} | ${siteConfig.title}`,
-    description: description || `Post: ${title}`,
+  // Handle different content types
+  const baseTitle = `${title} | ${siteConfig.title}`;
+  const baseDescription = description || `${contentType.charAt(0).toUpperCase() + contentType.slice(1)}: ${title}`;
+  
+  const seoData: SEOData = {
+    title: baseTitle,
+    description: baseDescription,
     canonical: url,
     ogImage,
     ogType: "article",
-    publishedTime: date.toISOString(),
-    modifiedTime: date.toISOString(),
-    tags: tags?.filter((tag) => tag !== null) || undefined,
-    noIndex: post.data.noIndex || false, // Add this line
+    noIndex: post.data.noIndex || false,
   };
+
+  // Add type-specific fields
+  if (date) {
+    seoData.publishedTime = date.toISOString();
+    seoData.modifiedTime = date.toISOString();
+  }
+
+  if (tags) {
+    seoData.tags = tags.filter((tag: string | null) => tag !== null);
+  }
+
+  // For diary entries, add mood/weather as keywords if available
+  if (contentType === 'diary' && (post as any).data.mood) {
+    seoData.keywords = [(post as any).data.mood];
+    if ((post as any).data.weather) {
+      seoData.keywords.push((post as any).data.weather);
+    }
+  }
+
+  return seoData;
+}
+
+// Generate SEO data for posts (compatibility wrapper)
+export function generatePostSEO(post: Post, url: string): SEOData {
+  return generateContentSEO(post, url, 'post');
 }
 
 // Generate SEO data for pages

@@ -163,6 +163,8 @@ export interface SiteConfig {
   optionalContentTypes: {
     projects: boolean;
     docs: boolean;
+    diary: boolean;
+    todo: boolean;
   };
 }
 
@@ -309,13 +311,17 @@ export const siteConfig: SiteConfig = {
     // [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]
     showMobileMenu: true,
     // [CONFIG:NAVIGATION_PAGES]
-    pages: [
-      { title: "文章", url: "/posts/" },
-      { title: "项目", url: "/projects/" },
-      { title: "文档", url: "/docs/" },
-      { title: "关于", url: "/about/" },
-      { title: "GitHub", url: "https://github.com/hechang/qlogjia" },
-    ],
+  pages: [
+    { title: "文章", url: "/posts" },
+    { title: "项目", url: "/projects" },
+    { title: "文档", url: "/docs" },
+    { title: "日记", url: "/diary" },
+    { title: "PPT", url: "/slides" },
+    { title: "待办", url: "/todo" },
+    { title: "统计", url: "/statistic" },
+    { title: "总结", url: "/summary" },
+    { title: "关于", url: "/about" },
+  ],
     // [CONFIG:NAVIGATION_SOCIAL]
     social: [
       {
@@ -332,6 +338,10 @@ export const siteConfig: SiteConfig = {
     projects: true, // Enable projects section
     // [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]
     docs: true, // Enable documentation section
+    // [CONFIG:OPTIONAL_CONTENT_TYPES_DIARY]
+    diary: true, // Enable diary section
+    // [CONFIG:OPTIONAL_CONTENT_TYPES_TODO]
+    todo: true, // Enable todo section
   },
 
   // Home Options

@@ -1,0 +1,484 @@
+---
+// Component that executes Dataview queries and displays results
+import type { CollectionEntry } from 'astro:content';
+import { executeDataviewQuery, formatFieldValue, getFieldDisplayName } from '@/utils/dataview';
+
+interface Props {
+  title?: string;
+  description?: string;
+  query: string;
+  collections: {
+    diary?: CollectionEntry<'diary'>[];
+    todo?: CollectionEntry<'todo'>[];
+    posts?: CollectionEntry<'posts'>[];
+    docs?: CollectionEntry<'docs'>[];
+    projects?: CollectionEntry<'projects'>[];
+  };
+}
+
+const { title, description, query, collections } = Astro.props;
+
+// Execute the query
+const result = await executeDataviewQuery(query, collections);
+---
+
+<div class="dataview-result-card">
+  {title && <h3 class="result-title">{title}</h3>}
+  {description && <p class="result-description">{description}</p>}
+
+  <div class="result-container">
+    <!-- Show query -->
+    <details class="query-details">
+      <summary class="query-summary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        查看查询语句
+      </summary>
+      <pre class="query-code"><code>{query.trim()}</code></pre>
+    </details>
+
+    <!-- Display results based on query type -->
+    {result.type === 'TABLE' && !result.grouped && (
+      <div class="table-container">
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>标题</th>
+              {result.fields?.map(field => (
+                <th>{getFieldDisplayName(field)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {result.items.length > 0 ? (
+              result.items.map((item: any) => (
+                <tr>
+                  <td>
+                    <a href={`/${item.collection}/${item.id}`} class="item-link">
+                      {item.data.title}
+                    </a>
+                  </td>
+                  {result.fields?.map(field => (
+                    <td>{formatFieldValue(item, field)}</td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colspan={result.fields ? result.fields.length + 1 : 1} class="no-results">
+                  暂无数据
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    )}
+
+    {result.type === 'TABLE' && result.grouped && (
+      <div class="grouped-container">
+        {Object.entries(result.grouped).map(([group, items]: [string, any[]]) => (
+          <div class="group-section">
+            <h4 class="group-title">{group}</h4>
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <th>标题</th>
+                  {result.fields?.map(field => (
+                    <th>{getFieldDisplayName(field)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item: any) => (
+                  <tr>
+                    <td>
+                      <a href={`/${item.collection}/${item.id}`} class="item-link">
+                        {item.data.title}
+                      </a>
+                    </td>
+                    {result.fields?.map(field => (
+                      <td>{formatFieldValue(item, field)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p class="group-count">共 {items.length} 项</p>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {result.type === 'LIST' && (
+      <ul class="result-list">
+        {result.items.length > 0 ? (
+          result.items.map((item: any) => (
+            <li class="list-item">
+              <a href={`/${item.collection}/${item.id}`} class="item-link">
+                {item.data.title}
+              </a>
+              {item.data.description && (
+                <span class="item-description">{item.data.description}</span>
+              )}
+            </li>
+          ))
+        ) : (
+          <li class="no-results">暂无数据</li>
+        )}
+      </ul>
+    )}
+
+    {result.type === 'TASK' && (
+      <ul class="task-list">
+        {result.items.length > 0 ? (
+          result.items.map((task: any) => (
+            <li class="task-item">
+              <div class="task-header">
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  disabled
+                  class="task-checkbox"
+                />
+                <span class={`task-text ${task.completed ? 'completed' : ''}`}>
+                  {task.text}
+                </span>
+              </div>
+              {task.sourceData && (
+                <div class="task-meta">
+                  <a href={`/todo/${task.sourceFile}`} class="source-link">
+                    来自: {task.sourceData.title}
+                  </a>
+                  {task.sourceData.priority && (
+                    <span class={`priority-badge priority-${task.sourceData.priority}`}>
+                      {task.sourceData.priority}
+                    </span>
+                  )}
+                  {task.sourceData.dueDate && (
+                    <span class="due-date">
+                      截止: {new Date(task.sourceData.dueDate).toLocaleDateString('zh-CN')}
+                    </span>
+                  )}
+                </div>
+              )}
+            </li>
+          ))
+        ) : (
+          <li class="no-results">暂无任务</li>
+        )}
+      </ul>
+    )}
+  </div>
+</div>
+
+<style>
+  .dataview-result-card {
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .result-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-heading);
+  }
+
+  .result-description {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .result-container {
+    background: var(--color-surface-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .query-details {
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface-secondary);
+  }
+
+  .query-summary {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+    list-style: none;
+  }
+
+  .query-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .query-summary:hover {
+    color: var(--color-accent);
+  }
+
+  .query-summary svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .query-code {
+    margin: 0;
+    padding: 1rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+
+  .query-code code {
+    font-family: inherit;
+  }
+
+  /* Table styles */
+  .table-container {
+    overflow-x: auto;
+    padding: 1rem;
+  }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .result-table thead {
+    background: var(--color-surface-secondary);
+  }
+
+  .result-table th {
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text-heading);
+    border-bottom: 2px solid var(--color-border);
+  }
+
+  .result-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-body);
+  }
+
+  .result-table tbody tr:hover {
+    background: var(--color-surface-secondary);
+  }
+
+  /* List styles */
+  .result-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .list-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .list-item:last-child {
+    border-bottom: none;
+  }
+
+  .list-item:hover {
+    background: var(--color-surface-secondary);
+  }
+
+  .item-link {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .item-link:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+  }
+
+  .item-description {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Task styles */
+  .task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .task-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .task-item:last-child {
+    border-bottom: none;
+  }
+
+  .task-item:hover {
+    background: var(--color-surface-secondary);
+  }
+
+  .task-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .task-checkbox {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    cursor: not-allowed;
+  }
+
+  .task-text {
+    flex: 1;
+    color: var(--color-text-body);
+    font-weight: 500;
+  }
+
+  .task-text.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+
+  .task-link {
+    flex: 1;
+    color: var(--color-text-body);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .task-link:hover {
+    color: var(--color-accent);
+  }
+
+  .source-link {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    margin-right: 0.5rem;
+  }
+
+  .source-link:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    flex-wrap: wrap;
+    padding-left: 2rem; /* Align with task text (checkbox width + gap) */
+  }
+
+  .priority-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .priority-high {
+    background: rgba(239, 68, 68, 0.2);
+    color: rgb(220, 38, 38);
+  }
+
+  .priority-medium {
+    background: rgba(251, 191, 36, 0.2);
+    color: rgb(217, 119, 6);
+  }
+
+  .priority-low {
+    background: rgba(34, 197, 94, 0.2);
+    color: rgb(21, 128, 61);
+  }
+
+  .due-date {
+    color: var(--color-text-muted);
+  }
+
+  /* Grouped results */
+  .grouped-container {
+    padding: 1rem;
+  }
+
+  .group-section {
+    margin-bottom: 2rem;
+  }
+
+  .group-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .group-title {
+    margin: 0 0 1rem 0;
+    padding: 0.5rem;
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .group-count {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    text-align: right;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .dataview-result-card {
+      padding: 1rem;
+    }
+
+    .result-table {
+      font-size: 0.8rem;
+    }
+
+    .result-table th,
+    .result-table td {
+      padding: 0.5rem;
+    }
+  }
+</style>

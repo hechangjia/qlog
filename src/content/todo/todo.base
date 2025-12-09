@@ -1,0 +1,9 @@
+views:
+  - type: table
+    name: 表格
+    filters:
+      and:
+        - date == "2025-12-03"
+    sort:
+      - property: file.name
+        direction: ASC

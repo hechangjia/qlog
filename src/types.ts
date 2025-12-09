@@ -17,6 +17,18 @@ export type Docs = CollectionEntry<"docs">;
 
 export type DocsData = CollectionEntry<"docs">["data"];
 
+export type Diary = CollectionEntry<"diary">;
+
+export type DiaryData = CollectionEntry<"diary">["data"];
+
+export type Todo = CollectionEntry<"todo">;
+
+export type TodoData = CollectionEntry<"todo">["data"];
+
+export type Slide = CollectionEntry<"slides">;
+
+export type SlideData = CollectionEntry<"slides">["data"];
+
 export interface Heading {
   depth: number;
   slug: string;

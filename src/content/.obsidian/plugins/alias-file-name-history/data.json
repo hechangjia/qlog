@@ -11,13 +11,17 @@
     "posts",
     "pages",
     "projects",
-    "docs"
+    "docs",
+    "todo",
+    "diary",
+    "slides"
   ],
   "excludeFolders": [],
   "fileExtensions": [
     "md"
   ],
   "trackFolderRenames": "index",
+  "excludePropertyName": "",
   "propertyName": "",
   "propertyValue": true,
   "propertyExcludes": false

@@ -9,6 +9,8 @@ import Tags from '@/components/Tags.astro';
 import Pagination from '@/components/Pagination.astro';
 import Icon from '@/components/Icon.astro';
 
+export const prerender = true;
+
 export const getStaticPaths: GetStaticPaths = async () => {
   const isDev = import.meta.env.DEV;
   

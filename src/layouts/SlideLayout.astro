@@ -1,0 +1,277 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+
+interface Props {
+  slide: CollectionEntry<'slides'>;
+}
+
+const { slide } = Astro.props;
+
+// Render the markdown content
+const { Content } = await render(slide);
+
+// Reveal.js configuration from frontmatter with comprehensive defaults
+const config = {
+  width: slide.data.width ?? 960,
+  height: slide.data.height ?? 700,
+  margin: slide.data.margin ?? 0.04,
+  minScale: slide.data.minScale ?? 0.2,
+  maxScale: slide.data.maxScale ?? 2.0,
+  theme: slide.data.theme || 'black',
+  transition: slide.data.transition || 'slide',
+  transitionSpeed: slide.data.transitionSpeed || 'default',
+  backgroundTransition: slide.data.backgroundTransition || 'fade',
+  controls: slide.data.controls ?? true,
+  controlsTutorial: slide.data.controlsTutorial ?? true,
+  controlsLayout: slide.data.controlsLayout || 'bottom-right',
+  controlsBackArrows: slide.data.controlsBackArrows || 'faded',
+  progress: slide.data.progress ?? true,
+  slideNumber: slide.data.slideNumber ?? true,
+  showSlideNumber: slide.data.showSlideNumber || 'all',
+  center: slide.data.center ?? true,
+  loop: slide.data.loop ?? false,
+  rtl: slide.data.rtl ?? false,
+  navigationMode: slide.data.navigationMode || 'default',
+  autoSlide: slide.data.autoSlide ?? 0,
+  autoSlideStoppable: slide.data.autoSlideStoppable ?? true,
+  mouseWheel: slide.data.mouseWheel ?? false,
+  previewLinks: slide.data.previewLinks ?? false,
+  hideAddressBar: slide.data.hideAddressBar ?? true,
+};
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{slide.data.title}</title>
+  <meta name="description" content={slide.data.description || ''}>
+  <meta name="author" content={slide.data.author || ''}>
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <!-- Reveal.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
+  <link rel="stylesheet" href={`https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/${config.theme}.css`}>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css">
+
+  <style>
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #191919;
+    }
+
+    /* Slide visibility */
+    .reveal .slides section {
+      display: none !important;
+    }
+    .reveal .slides section.present,
+    .reveal .slides section.present > section.present {
+      display: block !important;
+    }
+
+    /* Hide anchor links */
+    .reveal .anchor-link,
+    .reveal a.anchor-link {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    /* Slide styling */
+    .reveal section img {
+      border: none;
+      box-shadow: none;
+      background: none;
+    }
+
+    .reveal pre {
+      width: 100%;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .reveal pre code {
+      max-height: 500px;
+      padding: 20px;
+    }
+
+    .reveal .slides section {
+      text-align: left;
+    }
+
+    .reveal .slides section.center {
+      text-align: center;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+      text-transform: none;
+    }
+
+    .reveal blockquote {
+      width: 90%;
+      margin: 20px auto;
+      padding: 20px;
+      font-style: italic;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 5px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Utility classes */
+    .reveal .small { font-size: 0.7em; }
+    .reveal .large { font-size: 1.5em; }
+
+    .reveal .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .reveal .three-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .reveal .card {
+      padding: 15px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .reveal .highlight-box {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      background: rgba(66, 175, 250, 0.1);
+      border-left: 4px solid #42affa;
+    }
+
+    .reveal .warning-box {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      background: rgba(255, 193, 7, 0.1);
+      border-left: 4px solid #ffc107;
+    }
+
+    .reveal .success-box {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      background: rgba(76, 175, 80, 0.1);
+      border-left: 4px solid #4caf50;
+    }
+
+    .reveal .error-box {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      background: rgba(244, 67, 54, 0.1);
+      border-left: 4px solid #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <Content />
+    </div>
+  </div>
+
+  <!-- Reveal.js and plugins - use non-minified versions -->
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/notes/notes.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/search/search.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/zoom/zoom.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/math/math.js"></script>
+
+  <!-- Initialize Reveal.js -->
+  <script is:inline define:vars={{ config }}>
+    (function() {
+      'use strict';
+
+      // Configuration from server-side
+      const revealConfig = {
+        width: config.width,
+        height: config.height,
+        margin: config.margin,
+        minScale: config.minScale,
+        maxScale: config.maxScale,
+        controls: config.controls,
+        controlsLayout: config.controlsLayout,
+        controlsBackArrows: config.controlsBackArrows,
+        progress: config.progress,
+        slideNumber: config.slideNumber,
+        showSlideNumber: config.showSlideNumber,
+        hash: true,
+        history: true,
+        keyboard: true,
+        overview: true,
+        center: config.center,
+        touch: true,
+        loop: config.loop,
+        rtl: config.rtl,
+        navigationMode: config.navigationMode,
+        shuffle: false,
+        fragments: true,
+        fragmentInURL: true,
+        embedded: false,
+        help: true,
+        pause: true,
+        showNotes: false,
+        autoSlide: config.autoSlide,
+        autoSlideStoppable: config.autoSlideStoppable,
+        mouseWheel: config.mouseWheel,
+        previewLinks: config.previewLinks,
+        transition: config.transition,
+        transitionSpeed: config.transitionSpeed,
+        backgroundTransition: config.backgroundTransition,
+        display: 'block',
+        pdfMaxPagesPerSlide: 1,
+        pdfSeparateFragments: true,
+        viewDistance: 3,
+        mobileViewDistance: 2
+      };
+
+      // Wait for DOM to be ready
+      function initReveal() {
+        if (typeof Reveal === 'undefined') {
+          console.error('Reveal.js not loaded');
+          return;
+        }
+
+        Reveal.initialize({
+          ...revealConfig,
+          plugins: [
+            RevealHighlight,
+            RevealNotes,
+            RevealSearch,
+            RevealZoom,
+            RevealMath.KaTeX
+          ]
+        }).then(function() {
+          console.log('Reveal.js initialized');
+          console.log('Total slides:', Reveal.getTotalSlides());
+          Reveal.sync();
+          Reveal.layout();
+        }).catch(function(err) {
+          console.error('Reveal.js initialization failed:', err);
+        });
+      }
+
+      // Initialize when page loads
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initReveal);
+      } else {
+        initReveal();
+      }
+    })();
+  </script>
+</body>
+</html>

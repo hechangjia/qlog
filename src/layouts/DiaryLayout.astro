@@ -1,0 +1,333 @@
+---
+import type { Diary, Heading } from '@/types';
+import { siteConfig } from '@/config';
+import { generatePostSEO } from '@/utils/seo';
+import { optimizePostImagePath, getOptimizedFormat } from '@/utils/images';
+import { getCollection } from 'astro:content';
+import { shouldShowPost, processPost, calculateReadingTime, generateTOC, formatDate, formatDateMobile, getReadingTimeMobile } from '@/utils/markdown';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import Icon from '@/components/Icon.astro';
+import ImageWrapper from '@/components/ImageWrapper.astro';
+import { getAdjacentItems } from '@/utils/markdown';
+
+export interface Props {
+  diary: Diary;
+}
+
+const { diary } = Astro.props;
+
+// Check if we're in development mode
+const isDev = import.meta.env.DEV;
+
+// Generate SEO data
+const seoData = generatePostSEO(diary, import.meta.env.SITE || '');
+
+// Generate structured data for the diary entry
+const structuredData = {
+  "@context": "https://schema.schema.org",
+  "@type": "Article",
+  "headline": diary.data.title,
+  "description": diary.data.description,
+  "author": {
+    "@type": "Person",
+    "name": siteConfig.author
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": siteConfig.title,
+    "logo": {
+      "@type": "ImageObject",
+      "url": siteConfig.site + "/favicon.ico"
+    }
+  },
+  "datePublished": diary.data.date.toISOString(),
+  "dateModified": diary.data.date.toISOString(),
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": Astro.url.href
+  }
+};
+
+// Get all diary entries for navigation
+const allDiaryEntries = await getCollection('diary');
+const visibleDiaryEntries = allDiaryEntries.filter(entry => shouldShowPost(entry, isDev));
+
+// Process the diary content and get processed data including word count
+const { Content, headings, wordCount } = await processPost(diary);
+const readingTime = calculateReadingTime(diary.body);
+
+// Generate table of contents if enabled
+const hideTOC = diary.data.hideTOC === true;
+const shouldShowTOC = !hideTOC && siteConfig.tableOfContents.enabled && headings.length > 0;
+const toc = shouldShowTOC ? await generateTOC(headings) : [];
+
+// Get adjacent diary entries for navigation
+const { prev: prevEntry, next: nextEntry } = getAdjacentItems(visibleDiaryEntries, diary.id);
+
+// Mood icon mapping
+const moodIcons: Record<string, string> = {
+  happy: 'smile',
+  sad: 'frown',
+  neutral: 'meh',
+  excited: 'zap',
+  tired: 'moon',
+  stressed: 'alert-circle',
+  peaceful: 'heart',
+};
+
+// Weather icon mapping
+const weatherIcons: Record<string, string> = {
+  sunny: 'sun',
+  cloudy: 'cloud',
+  rainy: 'cloud-rain',
+  snowy: 'cloud-snow',
+  windy: 'wind',
+  stormy: 'cloud-lightning',
+  foggy: 'cloud-fog',
+};
+---
+
+<BaseLayout seoData={seoData}>
+  <Fragment slot="head">
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+    <!-- Preload diary cover image -->
+    {(() => {
+      if (!diary.data.image || diary.data.hideCoverImage === true) return false;
+
+      return diary.data.image && !diary.data.image.startsWith('http');
+    })() && (
+      <link
+        rel="preload"
+        as="image"
+        href={diary.data.image ? optimizePostImagePath(diary.data.image, diary.id, diary.id) : ''}
+        fetchpriority="high"
+      />
+    )}
+
+    <!-- Diary-specific meta tags -->
+    {diary.data.tags && diary.data.tags.length > 0 && (
+      <meta name="keywords" content={diary.data.tags.join(', ')}>
+    )}
+  </Fragment>
+
+  <div class="py-8 relative">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8 relative" style={`max-width: ${siteConfig.layout.contentWidth}`}>
+      <!-- Main content -->
+      <article class={`bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm ${diary.data.image && diary.data.hideCoverImage !== true ? 'overflow-hidden' : ''}`}>
+        {/* Cover image - shown if not hidden by frontmatter */}
+        {diary.data.image && diary.data.hideCoverImage !== true && (() => {
+          // Process image path similar to PostCard
+          let rawImage = diary.data.image;
+          if (Array.isArray(rawImage)) {
+            rawImage = rawImage[0];
+          }
+          
+          // Clean Obsidian brackets
+          let cleanImagePath = typeof rawImage === 'string' ? rawImage : '';
+          if (cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
+            cleanImagePath = cleanImagePath.slice(2, -2);
+          }
+          
+          // Determine src and basePath for ImageWrapper
+          let imageSrc = cleanImagePath;
+          let imageBasePath = '';
+          
+          if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('http')) {
+            // External URL - pass as-is
+            imageSrc = cleanImagePath;
+            imageBasePath = '';
+          } else {
+            // Detect folder-based vs file-based: if image path starts with 'attachments/',
+            // it's a single-file diary entry (shared attachments folder)
+            const isFileBased = typeof cleanImagePath === 'string' && cleanImagePath.startsWith('attachments/');
+            
+            if (isFileBased) {
+              // Single-file diary entry - remove attachments/ prefix
+              imageSrc = cleanImagePath.replace('attachments/', '');
+              imageBasePath = '/diary/attachments/';
+            } else {
+              // Folder-based diary entry - sync script copies images to diary folder root
+              // Remove 'images/' or 'attachments/' prefixes if present (sync script removes them)
+              if (cleanImagePath.startsWith('images/') || cleanImagePath.startsWith('attachments/')) {
+                imageSrc = cleanImagePath.replace(/^(images|attachments)\//, '');
+              } else {
+                imageSrc = cleanImagePath;
+              }
+              // Safety check: ensure diary.id exists before using it
+              if (diary.id) {
+                imageBasePath = `/diary/${diary.id}/`;
+              } else {
+                // Fallback to attachments directory if diary.id is undefined
+                imageBasePath = '/diary/attachments/';
+              }
+            }
+          }
+          
+          // Convert to WebP if applicable (sync-images.js creates WebP versions)
+          imageSrc = getOptimizedFormat(imageSrc);
+          
+          return (
+            <div class="h-40 sm:h-48 md:h-56 lg:h-64 overflow-hidden rounded-t-lg bg-primary-100 dark:bg-primary-800">
+              <ImageWrapper
+                src={imageSrc}
+                basePath={imageBasePath}
+                alt={diary.data.imageAlt || `Featured image for diary entry: ${diary.data.title}`}
+                class="w-full h-full"
+                width={800}
+                height={450}
+                format="webp"
+                quality={85}
+                loading="eager"
+                fetchpriority="high"
+              />
+            </div>
+          );
+        })()}
+
+        <!-- Diary content wrapper -->
+        <div class={`p-6 ${diary.data.image && diary.data.hideCoverImage !== true ? 'rounded-b-lg' : 'rounded-lg'}`}>
+          <!-- Diary header -->
+          <header class="mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-primary-900 dark:text-primary-50 mb-4 leading-tight">
+              {diary.data.title}
+            </h1>
+
+            <!-- Diary metadata -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+              <!-- Date -->
+              <div class="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-300">
+                <Icon name="calendar" class="w-4 h-4" />
+                <time datetime={diary.data.date.toISOString()}>
+                  <span class="hidden sm:inline">
+                    {formatDate(diary.data.date)}
+                  </span>
+                  <span class="sm:hidden">
+                    {formatDateMobile(diary.data.date)}
+                  </span>
+                </time>
+              </div>
+
+              <!-- Mood -->
+              {diary.data.mood && (
+                <div class="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-300">
+                  <Icon name={moodIcons[diary.data.mood] || 'meh'} class="w-4 h-4" />
+                  <span class="capitalize">{diary.data.mood}</span>
+                </div>
+              )}
+
+              <!-- Weather -->
+              {diary.data.weather && (
+                <div class="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-300">
+                  <Icon name={weatherIcons[diary.data.weather.toLowerCase()] || 'cloud'} class="w-4 h-4" />
+                  <span>{diary.data.weather}</span>
+                </div>
+              )}
+
+              <!-- Location -->
+              {diary.data.location && (
+                <div class="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-300">
+                  <Icon name="map-pin" class="w-4 h-4" />
+                  <span>{diary.data.location}</span>
+                </div>
+              )}
+
+              <!-- Reading time -->
+              {siteConfig.postOptions.readingTime && readingTime && (
+                <div class="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-300">
+                  <Icon name="clock" class="w-4 h-4" />
+                  <span>
+                    <span class="hidden sm:inline">{readingTime.text && readingTime.text !== 'read0' && readingTime.text !== '' ? readingTime.text : '1 min read'}</span>
+                    <span class="sm:hidden">{getReadingTimeMobile(readingTime)}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <!-- Tags -->
+            {diary.data.tags && diary.data.tags.length > 0 && (
+              <div class="flex flex-wrap gap-2 mb-6">
+                {diary.data.tags.map(tag => (
+                  <a
+                    href={`/diary/tag/${encodeURIComponent(tag)}`}
+                    class="text-xs text-primary-600 dark:text-primary-300 bg-primary-100 dark:bg-primary-800 px-2.5 py-1 rounded-full border border-primary-200 dark:border-primary-700 transition-colors hover:bg-highlight-100 dark:hover:bg-highlight-800"
+                  >
+                    {tag}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <!-- Description -->
+            {diary.data.description && (
+              <div class="text-primary-700 dark:text-primary-300 italic border-l-4 border-highlight-500 dark:border-highlight-400 pl-4 py-2 mb-6">
+                {diary.data.description}
+              </div>
+            )}
+          </header>
+
+          <!-- Diary content -->
+          <div class="prose dark:prose-dark max-w-none" id="diary-content">
+            <Content />
+          </div>
+
+          <!-- Diary navigation -->
+          {(prevEntry || nextEntry) && (
+            <nav class="mt-12 pt-8 border-t border-primary-200 dark:border-primary-700">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {prevEntry && (
+                  <div class="text-left">
+                    <a
+                      href={`/diary/${prevEntry.id}`}
+                      class="group block p-4 rounded-lg border border-primary-200 dark:border-primary-700 hover:border-highlight-300 dark:hover:border-highlight-600 transition-all duration-200 hover:shadow-md"
+                    >
+                      <div class="text-xs text-primary-500 dark:text-primary-400 mb-1">Previous Entry</div>
+                      <h3 class="font-semibold text-primary-900 dark:text-primary-50 group-hover:text-highlight-600 dark:group-hover:text-highlight-400 transition-colors">
+                        {prevEntry.data.title}
+                      </h3>
+                      <div class="flex items-center gap-1 mt-2 text-sm text-primary-500 dark:text-primary-400">
+                        <Icon name="arrow-left" class="w-4 h-4" />
+                        <span>{formatDate(prevEntry.data.date)}</span>
+                      </div>
+                    </a>
+                  </div>
+                )}
+
+                {nextEntry && (
+                  <div class={`text-right ${!prevEntry ? 'md:col-start-2' : ''}`}>
+                    <a
+                      href={`/diary/${nextEntry.id}`}
+                      class="group block p-4 rounded-lg border border-primary-200 dark:border-primary-700 hover:border-highlight-300 dark:hover:border-highlight-600 transition-all duration-200 hover:shadow-md"
+                    >
+                      <div class="text-xs text-primary-500 dark:text-primary-400 mb-1">Next Entry</div>
+                      <h3 class="font-semibold text-primary-900 dark:text-primary-50 group-hover:text-highlight-600 dark:group-hover:text-highlight-400 transition-colors">
+                        {nextEntry.data.title}
+                      </h3>
+                      <div class="flex items-center justify-end gap-1 mt-2 text-sm text-primary-500 dark:text-primary-400">
+                        <span>{formatDate(nextEntry.data.date)}</span>
+                        <Icon name="arrow-right" class="w-4 h-4" />
+                      </div>
+                    </a>
+                  </div>
+                )}
+              </div>
+            </nav>
+          )}
+        </div>
+      </article>
+
+      <!-- Desktop Sidebar - floats to the right of the content container -->
+      {shouldShowTOC && (
+        <div class="hidden xl:block absolute top-0 left-full ml-1 w-[280px]">
+          <div class="top-24" id="sidebar">
+            <div id="toc">
+              <TableOfContents headings={toc} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

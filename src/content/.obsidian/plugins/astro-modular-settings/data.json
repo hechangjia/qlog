@@ -53,12 +53,28 @@
         "url": "/docs/"
       },
       {
-        "title": "关于",
-        "url": "/about/"
+        "title": "日记",
+        "url": "/diary/"
       },
       {
-        "title": "GitHub",
-        "url": "https://github.com/hechang/qlogjia"
+        "title": "PPT",
+        "url": "/slides/"
+      },
+      {
+        "title": "待办",
+        "url": "/todo/"
+      },
+      {
+        "title": "统计",
+        "url": "/statistic/"
+      },
+      {
+        "title": "总结",
+        "url": "/summary/"
+      },
+      {
+        "title": "关于",
+        "url": "/about/"
       }
     ],
     "social": [

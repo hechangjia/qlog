@@ -1,0 +1,143 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate, formatDateMobile } from '@/utils/markdown';
+
+export interface Props {
+  slide: CollectionEntry<'slides'>;
+  eager?: boolean;
+}
+
+const { slide, eager = false } = Astro.props;
+
+// Theme colors mapping
+const themeColors = {
+  black: 'bg-gray-900 text-white',
+  white: 'bg-gray-100 text-gray-900',
+  league: 'bg-indigo-900 text-white',
+  beige: 'bg-amber-100 text-amber-900',
+  sky: 'bg-blue-500 text-white',
+  night: 'bg-blue-950 text-blue-50',
+  serif: 'bg-stone-100 text-stone-900',
+  simple: 'bg-white text-black',
+  solarized: 'bg-yellow-50 text-yellow-900',
+  blood: 'bg-red-900 text-red-50',
+  moon: 'bg-indigo-950 text-indigo-50',
+};
+
+const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || themeColors.black;
+---
+
+<article class="group relative border border-primary-200 dark:border-primary-700 rounded-lg bg-primary-50 dark:bg-primary-900 overflow-hidden hover:border-highlight-300 dark:hover:border-highlight-600 transition-all duration-300">
+  <!-- Theme indicator -->
+  {slide.data.theme && (
+    <div class="absolute top-4 right-4 z-10">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700">
+        {slide.data.theme}
+      </span>
+    </div>
+  )}
+
+  <!-- Preview/Thumbnail -->
+  <div class={`h-48 flex items-center justify-center relative overflow-hidden ${themeColor}`}>
+    <div class="absolute inset-0 opacity-20">
+      <div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px);"></div>
+    </div>
+    <div class="relative z-10 text-center p-6">
+      <h3 class="text-xl font-bold mb-2 line-clamp-2">{slide.data.title}</h3>
+      {slide.data.author && (
+        <p class="text-sm opacity-90">作者: {slide.data.author}</p>
+      )}
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="p-6">
+    <!-- Date and transition -->
+    <div class="flex items-center text-sm text-primary-600 dark:text-primary-400 mb-3">
+      <time datetime={slide.data.date.toISOString()}>
+        <span class="hidden sm:inline">{formatDate(slide.data.date)}</span>
+        <span class="sm:hidden">{formatDateMobile(slide.data.date)}</span>
+      </time>
+      <span class="mx-2">•</span>
+      <span>{slide.data.transition} transition</span>
+    </div>
+
+    <!-- Title -->
+    <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100 mb-3 group-hover:text-highlight-600 dark:group-hover:text-highlight-400 transition-colors">
+      <a href={`/slides/${slide.id}`} class="block">
+        {slide.data.title}
+      </a>
+    </h2>
+
+    <!-- Description -->
+    {slide.data.description && (
+      <p class="text-primary-700 dark:text-primary-300 mb-4 line-clamp-2">
+        {slide.data.description}
+      </p>
+    )}
+
+    <!-- Tags -->
+    {slide.data.tags && slide.data.tags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-4">
+        {slide.data.tags.slice(0, 5).map(tag => (
+          <a
+            href={`/slides?tag=${encodeURIComponent(tag)}`}
+            class="text-xs text-primary-600 dark:text-primary-300 bg-primary-100 dark:bg-primary-800 px-2.5 py-1 rounded-full border border-primary-200 dark:border-primary-700 transition-colors hover:bg-highlight-100 dark:hover:bg-highlight-800"
+          >
+            #{tag}
+          </a>
+        ))}
+      </div>
+    )}
+
+    <!-- Additional metadata -->
+    <div class="flex flex-wrap items-center gap-4 text-sm text-primary-600 dark:text-primary-400">
+      <!-- Controls -->
+      {slide.data.controls && (
+        <div class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+          </svg>
+          <span>Controls</span>
+        </div>
+      )}
+
+      <!-- Progress indicator -->
+      {slide.data.progress && (
+        <div class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <span>Progress</span>
+        </div>
+      )}
+
+      <!-- Slide numbers -->
+      {slide.data.slideNumber && (
+        <div class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+          </svg>
+          <span>Numbers</span>
+        </div>
+      )}
+    </div>
+
+    <!-- View button -->
+    <a
+      href={`/slides/${slide.id}`}
+      class="mt-4 block w-full text-center py-2.5 px-4 bg-gradient-to-r from-highlight-500 to-highlight-600 hover:from-highlight-600 hover:to-highlight-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105"
+    >
+      查看演示 →
+    </a>
+  </div>
+</article>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

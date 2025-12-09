@@ -4,6 +4,8 @@ import { shouldShowContent } from '@/utils/markdown';
 import { siteConfig } from '@/config';
 import ProjectLayout from '@/layouts/ProjectLayout.astro';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   // If projects are disabled, don't generate any paths
   if (!siteConfig.optionalContentTypes.projects) {

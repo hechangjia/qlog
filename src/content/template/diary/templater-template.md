@@ -1,0 +1,36 @@
+---
+title: "<% tp.date.now("YYYY-MM-DD") %> 日记"
+description: "<% tp.file.cursor(1) %>"
+date: <% tp.date.now("YYYY-MM-DD") %>
+mood: happy
+weather: "☀️"
+location: ""
+tags: []
+draft: false
+---
+
+# <% tp.date.now("YYYY年MM月DD日") %> - <% tp.date.now("dddd", "YYYY-MM-DD", "zh-cn") %>
+
+> 💭 今日心情：<% tp.file.cursor(2) %>
+
+## 📝 今日记录
+
+<% tp.file.cursor(3) %>
+
+## 🎯 今日亮点
+
+-
+
+## 💡 思考与感悟
+
+<% tp.file.cursor(4) %>
+
+## 📊 今日数据
+
+- **天气**: <% tp.file.cursor(5) %>
+- **地点**: <% tp.file.cursor(6) %>
+- **心情**: <% tp.file.cursor(7) %>
+
+---
+
+**今日关键词**: <% tp.file.cursor(8) %>

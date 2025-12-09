@@ -1,0 +1,229 @@
+/* Custom Reveal.js Styles */
+
+/* Ensure proper section formatting for Advanced Slides syntax */
+.reveal .slides > section,
+.reveal .slides > section > section {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Handle horizontal rule as slide separator */
+.reveal hr {
+  display: none;
+}
+
+/* Advanced Slides comment syntax */
+.reveal .slides section[data-notes] {
+  position: relative;
+}
+
+/* Background images */
+.reveal section[data-background] {
+  background-size: cover;
+  background-position: center;
+}
+
+/* Fragments and animations */
+.reveal .fragment.fade-in-then-out {
+  opacity: 0;
+}
+
+.reveal .fragment.fade-in-then-out.visible {
+  opacity: 1;
+}
+
+.reveal .fragment.fade-in-then-out.current-fragment {
+  opacity: 1;
+}
+
+/* Two-column layout */
+.reveal .two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Three-column layout */
+.reveal .three-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Card styling */
+.reveal .card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Highlight box */
+.reveal .highlight-box {
+  background: rgba(66, 175, 250, 0.1);
+  border-left: 4px solid #42affa;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Warning box */
+.reveal .warning-box {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid #ffc107;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Success box */
+.reveal .success-box {
+  background: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid #4caf50;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Error box */
+.reveal .error-box {
+  background: rgba(244, 67, 54, 0.1);
+  border-left: 4px solid #f44336;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Center content */
+.reveal .center-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* Full-screen image */
+.reveal .full-screen-image {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+/* Code block improvements */
+.reveal pre code {
+  font-size: 0.9em;
+  line-height: 1.5;
+  border-radius: 4px;
+}
+
+/* Table styling */
+.reveal table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.reveal table th,
+.reveal table td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.reveal table th {
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
+/* List improvements */
+.reveal ul ul,
+.reveal ul ol,
+.reveal ol ul,
+.reveal ol ol {
+  margin-left: 2rem;
+  margin-top: 0.5rem;
+}
+
+.reveal li {
+  margin: 0.5rem 0;
+}
+
+/* Task list */
+.reveal .task-list-item {
+  list-style-type: none;
+}
+
+.reveal .task-list-item input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+/* Speaker notes styling (visible in speaker view) */
+.reveal aside.notes {
+  font-size: 1em;
+  color: #333;
+  background: #f8f8f8;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+/* Print styling */
+@media print {
+  .reveal .slides section {
+    page-break-after: always;
+  }
+
+  .reveal .slides section:last-child {
+    page-break-after: avoid;
+  }
+}
+
+/* Advanced Slides specific classes */
+.reveal .slide-background {
+  opacity: 1;
+}
+
+.reveal .slide-background-content {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 1;
+}
+
+/* Footer */
+.reveal .slide-footer {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  font-size: 0.6em;
+  opacity: 0.7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Progress bar customization */
+.reveal .progress {
+  height: 3px;
+}
+
+/* Controls customization */
+.reveal .controls {
+  bottom: 2rem;
+  right: 2rem;
+}
+
+/* Slide number customization */
+.reveal .slide-number {
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 0.8em;
+}
