@@ -609,7 +609,7 @@ const seoData = {
 
         while (retryCount <= maxRetries) {
           try {
-            console.log(`📡 Sending request to /api/deepseek-chat (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+            console.log(`📡 Sending request to DeepSeek API (attempt ${retryCount + 1}/${maxRetries + 1})...`);
             console.log('Request body preview:', {
               hasApiKey: !!deepseekApiKey,
               apiKeyLength: deepseekApiKey.length,
@@ -621,13 +621,14 @@ const seoData = {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            deepseekResponse = await fetch('/api/deepseek-chat', {
+            deepseekResponse = await fetch('https://api.deepseek.com/chat/completions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${deepseekApiKey}`,
               },
               body: JSON.stringify({
-                apiKey: deepseekApiKey,
+                model: 'deepseek-chat',
                 messages: deepseekPayload.messages,
                 max_tokens: deepseekPayload.max_tokens,
                 temperature: deepseekPayload.temperature,
@@ -646,7 +647,7 @@ const seoData = {
               throw new Error(`HTTP error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
             }
           } catch (fetchError) {
-            console.error(`❌ Server API fetch error (attempt ${retryCount + 1}):`, fetchError);
+            console.error(`❌ DeepSeek API fetch error (attempt ${retryCount + 1}):`, fetchError);
             lastError = fetchError;
             retryCount++;
             if (retryCount <= maxRetries) {
@@ -661,7 +662,7 @@ const seoData = {
           throw new Error(`请求失败: ${lastError ? lastError.message : '未知错误'}`);
         }
 
-        console.log('📥 Server API response status:', deepseekResponse.status, deepseekResponse.statusText);
+        console.log('📥 DeepSeek API response status:', deepseekResponse.status, deepseekResponse.statusText);
 
         let responseData;
         try {
@@ -671,28 +672,25 @@ const seoData = {
 
           responseData = JSON.parse(responseText);
           console.log('✅ Response parsed successfully:', {
-            success: responseData.success,
-            hasData: !!responseData.data,
             hasError: !!responseData.error,
-            hasChoices: !!responseData.data?.choices,
-            choicesCount: responseData.data?.choices?.length
+            hasChoices: !!responseData.choices,
+            choicesCount: responseData.choices?.length
           });
         } catch (parseError) {
           console.error('❌ Failed to parse JSON response:', parseError);
-          throw new Error(`服务器返回了无效的响应格式: ${parseError.message}`);
+          throw new Error(`DeepSeek API返回了无效的响应格式: ${parseError.message}`);
         }
 
-        if (!responseData.success) {
+        if (responseData.error) {
           console.error('❌ API returned error:', {
             error: responseData.error,
-            details: responseData.details,
             fullResponse: responseData
           });
-          throw new Error(responseData.error || '调用DeepSeek API失败');
+          throw new Error(responseData.error.message || '调用DeepSeek API失败');
         }
 
         console.log('✅ API call successful, extracting analysis...');
-        const analysis = responseData.data?.choices?.[0]?.message?.content;
+        const analysis = responseData.choices?.[0]?.message?.content;
 
         console.log('Analysis result:', {
           hasAnalysis: !!analysis,
@@ -927,13 +925,14 @@ const seoData = {
             temperature: 0.7,
           };
 
-          const imagePromptResponse = await fetch('/api/deepseek-chat', {
+          const imagePromptResponse = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentDeepseekApiKey}`,
             },
             body: JSON.stringify({
-              apiKey: currentDeepseekApiKey,
+              model: 'deepseek-chat',
               messages: imagePromptPayload.messages,
               max_tokens: imagePromptPayload.max_tokens,
               temperature: imagePromptPayload.temperature,
@@ -942,11 +941,11 @@ const seoData = {
 
           const imagePromptResult = await imagePromptResponse.json();
 
-          if (!imagePromptResult.success) {
-            throw new Error('生成图片提示词失败：' + imagePromptResult.error);
+          if (imagePromptResult.error) {
+            throw new Error('生成图片提示词失败：' + (imagePromptResult.error.message || imagePromptResult.error));
           }
 
-          baseImagePrompt = imagePromptResult.data?.choices?.[0]?.message?.content || '';
+          baseImagePrompt = imagePromptResult.choices?.[0]?.message?.content || '';
           console.log('Generated base image prompt:', baseImagePrompt);
 
           if (!baseImagePrompt) {
