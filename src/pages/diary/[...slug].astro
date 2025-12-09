@@ -4,8 +4,6 @@ import { getCollection } from 'astro:content';
 import { shouldShowPost } from '@/utils/markdown';
 import DiaryLayout from '@/layouts/DiaryLayout.astro';
 
-export const prerender = true;
-
 export const getStaticPaths: GetStaticPaths = async () => {
   // Get all diary entries
   const diaries = await getCollection('diary');

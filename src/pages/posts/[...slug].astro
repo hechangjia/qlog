@@ -4,8 +4,6 @@ import { getCollection } from 'astro:content';
 import { shouldShowPost } from '@/utils/markdown';
 import PostLayout from '@/layouts/PostLayout.astro';
 
-export const prerender = true;
-
 export const getStaticPaths: GetStaticPaths = async () => {
   // Get all posts
   const posts = await getCollection('posts');

@@ -3,8 +3,6 @@ import type { GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import SlideLayout from '@/layouts/SlideLayout.astro';
 
-export const prerender = true;
-
 export const getStaticPaths: GetStaticPaths = async () => {
   const slides = await getCollection('slides');
   const isDev = import.meta.env.DEV;

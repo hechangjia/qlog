@@ -4,8 +4,6 @@ import { getCollection } from 'astro:content';
 import { shouldShowPost } from '@/utils/markdown';
 import TodoLayout from '@/layouts/TodoLayout.astro';
 
-export const prerender = true;
-
 export const getStaticPaths: GetStaticPaths = async () => {
   // Get all todo entries
   const todos = await getCollection('todo');
