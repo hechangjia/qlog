@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { siteConfig } from '@/config';
 
@@ -429,18 +431,31 @@ const seoData = {
   </div>
 
   <script is:inline>
-    let selectedPeriod = 'week';
+    // Use window object to prevent redeclaration errors with Swup
+    if (!window.summaryPageState) {
+      window.summaryPageState = {
+        selectedPeriod: 'week',
+        currentSummaryData: null,
+        currentAnalysis: null,
+        currentImagePrompt: null,
+        generatedImages: [],
+        currentDeepseekApiKey: '',
+        currentZImageApiKey: ''
+      };
+    }
 
-    // Global state management
-    let currentSummaryData = null;
-    let currentAnalysis = null;
-    let currentImagePrompt = null;
-    let generatedImages = [];
-    let currentDeepseekApiKey = '';
-    let currentZImageApiKey = '';
+    // Create local aliases for easier access
+    let selectedPeriod = window.summaryPageState.selectedPeriod;
+    let currentSummaryData = window.summaryPageState.currentSummaryData;
+    let currentAnalysis = window.summaryPageState.currentAnalysis;
+    let currentImagePrompt = window.summaryPageState.currentImagePrompt;
+    let generatedImages = window.summaryPageState.generatedImages;
+    let currentDeepseekApiKey = window.summaryPageState.currentDeepseekApiKey;
+    let currentZImageApiKey = window.summaryPageState.currentZImageApiKey;
 
     function selectPeriod(period) {
       selectedPeriod = period;
+      window.summaryPageState.selectedPeriod = period;
 
       // Update button styles
       document.querySelectorAll('.period-btn').forEach(btn => {

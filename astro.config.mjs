@@ -30,7 +30,7 @@ const DEPLOYMENT_PLATFORM = process.env.DEPLOYMENT_PLATFORM || 'netlify';
 
 export default defineConfig({
   site: siteConfig.site,
-  output: 'static', // Static mode with dynamic API routes
+  output: 'hybrid', // Hybrid mode: static pages + dynamic API routes
   adapter: netlify({
     edgeMiddleware: false,
   }),
