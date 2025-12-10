@@ -136,7 +136,13 @@ image: {
     ],
     shikiConfig: {
       theme: 'github-dark',
-      wrap: true
+      wrap: true,
+      // [你要求的修改] 添加 dataview 支持
+      langAlias: {
+        dataview: 'sql',
+        sqljs: 'sql',
+        dataviewjs: 'javascript',
+      }
     }
   },
   vite: {

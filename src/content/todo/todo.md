@@ -1,36 +1,28 @@
 ---
-title: 测试
+title: 2026前的待办
 description: 实现日记、待办、统计和年度总结功能
 date: 2025-12-10
-dueDate: 2025-12-13
-priority: low
-status: done
+dueDate: 2026-01-01
+priority: high
+status: in-progress
 category: 开发
 tags:
   - 项目
   - 编程
   - 重要
-estimatedTime: 16小时
-progress: 33
+  - 2026年
+estimatedTime: 40小时
+progress: 15
 draft: false
 ---
-- [ ] 测试集
-- [ ] s参加了
-- [ ]  就踹了
-> [!note]+ dajiahao
-> - [ ] kls
-> - [ ] kfks
-> - [ ] fska
+# 重要
 
-![[todo.base]]
+- [ ] 实用indextt2以及GPT-SoVITS实现人声克隆。
+- [ ] 使用Z-image-turbo实现图片生成
+- [ ] 运动
+- [ ] 与GPT对话
 
 
 
-```dataview
-TABLE mood as "心情"
-FROM "diary"
-WHERE mood
-GROUP BY mood
-SORT mood ASC
-```
+
 

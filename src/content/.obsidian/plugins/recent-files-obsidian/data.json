@@ -1,12 +1,32 @@
 {
   "recentFiles": [
     {
-      "basename": "todo",
-      "path": "special/todo.md"
+      "basename": "demo",
+      "path": "todo/demo.md"
     },
     {
-      "basename": "2025-12-qlog-development",
-      "path": "todo/2025-12-qlog-development.md"
+      "basename": "2025-12-09",
+      "path": "diary/2025-12-09.md"
+    },
+    {
+      "basename": "2025-12-10",
+      "path": "diary/2025-12-10.md"
+    },
+    {
+      "basename": "templater-template",
+      "path": "template/diary/templater-template.md"
+    },
+    {
+      "basename": "templater-template",
+      "path": "template/slides/templater-template.md"
+    },
+    {
+      "basename": "diary",
+      "path": "template/diary/diary.md"
+    },
+    {
+      "basename": "templater-template",
+      "path": "template/todo/templater-template.md"
     },
     {
       "basename": "todo",
@@ -21,12 +41,12 @@
       "path": "bases/Home.base"
     },
     {
-      "basename": "2025-12-07",
-      "path": "diary/2025-12-07.md"
+      "basename": "qlog-development",
+      "path": "todo/qlog-development.md"
     },
     {
-      "basename": "2025-12-09-beautiful-day",
-      "path": "diary/2025-12-09-beautiful-day.md"
+      "basename": "todo",
+      "path": "special/todo.md"
     },
     {
       "basename": "advanced-slides-tutorial",
@@ -39,14 +59,6 @@
     {
       "basename": "obsidian-integration",
       "path": "slides/obsidian-integration.md"
-    },
-    {
-      "basename": "2025-12-08",
-      "path": "diary/2025-12-08.md"
-    },
-    {
-      "basename": "2025-12-09",
-      "path": "diary/2025-12-09.md"
     },
     {
       "basename": "obsidian-embeds-demo",
@@ -71,10 +83,6 @@
     {
       "basename": "DATAVIEW-EXAMPLES",
       "path": "template/DATAVIEW-EXAMPLES.md"
-    },
-    {
-      "basename": "templater-template",
-      "path": "template/slides/templater-template.md"
     }
   ],
   "omittedPaths": [],

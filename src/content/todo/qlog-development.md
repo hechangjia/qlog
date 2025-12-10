@@ -1,15 +1,22 @@
 ---
-title: "完成Qlog项目开发"
-description: "实现日记、待办、统计和年度总结功能"
+title: 完成Qlog项目开发
+description: 实现日记、待办、统计和年度总结功能
 date: 2025-12-09
-dueDate: 2025-12-15
+dueDate: 2025-12-12
 priority: high
 status: in-progress
-category: "开发"
-tags: ["项目", "编程", "重要"]
-estimatedTime: "16小时"
-progress: 75
+category: qlog
+tags:
+  - 项目
+  - 编程
+  - 重要
+estimatedTime: 16小时
+progress: 90
 draft: false
+aliases:
+  - qlog-develop
+  - gemini
+  - claude
 ---
 
 # 项目目标
