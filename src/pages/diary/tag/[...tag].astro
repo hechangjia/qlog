@@ -1,31 +1,33 @@
 ---
-import type { GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import { siteConfig } from '@/config';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import DiaryCard from '@/components/DiaryCard.astro';
 import Icon from '@/components/Icon.astro';
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const allDiary = await getCollection('diary');
-  const uniqueTags = [...new Set(allDiary.flatMap(entry => entry.data.tags || []))];
+export async function getStaticPaths() {
+  const allEntries = await getCollection('diary');
+  // 提取所有标签
+  const uniqueTags = [...new Set(allEntries.flatMap(entry => entry.data.tags || []))];
 
-  return uniqueTags.map(tag => ({
-    params: { tag },
-    props: { tag, allDiary }
-  }));
-};
+  return uniqueTags.map(tag => {
+    const filteredEntries = allEntries.filter(entry => 
+      entry.data.tags && entry.data.tags.includes(tag)
+    ).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const { tag, allDiary } = Astro.props;
+    return {
+      params: { tag },
+      props: { tag, entries: filteredEntries }
+    };
+  });
+}
 
-const filteredDiary = allDiary.filter(entry => 
-  entry.data.tags && entry.data.tags.includes(tag)
-).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const { tag, entries } = Astro.props;
 
-const pageTitle = `日记标签: "${tag}"`;
+const pageTitle = `日记标签: ${tag}`;
 const seoData = {
   title: `${pageTitle} | ${siteConfig.title}`,
-  description: `标签为 ${tag} 的日记`,
+  description: `标签为 #${tag} 的日记列表`,
   canonical: Astro.url.href,
   ogType: 'website' as const
 };
@@ -43,18 +45,18 @@ const seoData = {
         {pageTitle}
       </h1>
       <p class="mt-2 text-primary-600 dark:text-primary-400">
-        共找到 {filteredDiary.length} 篇相关日记
+        共找到 {entries.length} 篇日记
       </p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {filteredDiary.length > 0 ? (
-        filteredDiary.map(diary => (
-          /* [修复] 这里修改为 entry={diary} */
-          <DiaryCard entry={diary} />
+    <div class="space-y-6">
+      {entries.length > 0 ? (
+        entries.map(entry => (
+          /* 注意：这里使用 entry 属性，匹配你 DiaryCard 的定义 */
+          <DiaryCard entry={entry} />
         ))
       ) : (
-        <p>没有找到相关日记。</p>
+        <p class="text-center py-10 text-gray-500">该标签下暂无日记。</p>
       )}
     </div>
   </div>

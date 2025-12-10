@@ -28,7 +28,6 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
 ---
 
 <article class="group relative border border-primary-200 dark:border-primary-700 rounded-lg bg-primary-50 dark:bg-primary-900 overflow-hidden hover:border-highlight-300 dark:hover:border-highlight-600 transition-all duration-300">
-  <!-- Theme indicator -->
   {slide.data.theme && (
     <div class="absolute top-4 right-4 z-10">
       <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700">
@@ -37,7 +36,6 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
     </div>
   )}
 
-  <!-- Preview/Thumbnail -->
   <div class={`h-48 flex items-center justify-center relative overflow-hidden ${themeColor}`}>
     <div class="absolute inset-0 opacity-20">
       <div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px);"></div>
@@ -50,9 +48,7 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
     </div>
   </div>
 
-  <!-- Content -->
   <div class="p-6">
-    <!-- Date and transition -->
     <div class="flex items-center text-sm text-primary-600 dark:text-primary-400 mb-3">
       <time datetime={slide.data.date.toISOString()}>
         <span class="hidden sm:inline">{formatDate(slide.data.date)}</span>
@@ -62,26 +58,24 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
       <span>{slide.data.transition} transition</span>
     </div>
 
-    <!-- Title -->
     <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100 mb-3 group-hover:text-highlight-600 dark:group-hover:text-highlight-400 transition-colors">
       <a href={`/slides/${slide.id}`} class="block">
         {slide.data.title}
       </a>
     </h2>
 
-    <!-- Description -->
     {slide.data.description && (
       <p class="text-primary-700 dark:text-primary-300 mb-4 line-clamp-2">
         {slide.data.description}
       </p>
     )}
 
-    <!-- Tags -->
     {slide.data.tags && slide.data.tags.length > 0 && (
       <div class="flex flex-wrap gap-2 mb-4">
         {slide.data.tags.slice(0, 5).map(tag => (
+          /* [修复] 使用 /slides/tag/[tag] 路径 */
           <a
-            href={`/slides?tag=${encodeURIComponent(tag)}`}
+            href={`/slides/tag/${encodeURIComponent(tag)}`}
             class="text-xs text-primary-600 dark:text-primary-300 bg-primary-100 dark:bg-primary-800 px-2.5 py-1 rounded-full border border-primary-200 dark:border-primary-700 transition-colors hover:bg-highlight-100 dark:hover:bg-highlight-800"
           >
             #{tag}
@@ -90,9 +84,7 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
       </div>
     )}
 
-    <!-- Additional metadata -->
     <div class="flex flex-wrap items-center gap-4 text-sm text-primary-600 dark:text-primary-400">
-      <!-- Controls -->
       {slide.data.controls && (
         <div class="flex items-center gap-1">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -102,7 +94,6 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
         </div>
       )}
 
-      <!-- Progress indicator -->
       {slide.data.progress && (
         <div class="flex items-center gap-1">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -112,7 +103,6 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
         </div>
       )}
 
-      <!-- Slide numbers -->
       {slide.data.slideNumber && (
         <div class="flex items-center gap-1">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -123,7 +113,6 @@ const themeColor = themeColors[slide.data.theme as keyof typeof themeColors] || 
       )}
     </div>
 
-    <!-- View button -->
     <a
       href={`/slides/${slide.id}`}
       class="mt-4 block w-full text-center py-2.5 px-4 bg-gradient-to-r from-highlight-500 to-highlight-600 hover:from-highlight-600 hover:to-highlight-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105"
