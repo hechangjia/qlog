@@ -1,6 +1,22 @@
 {
   "recentFiles": [
     {
+      "basename": "todo",
+      "path": "special/todo.md"
+    },
+    {
+      "basename": "2025-12-qlog-development",
+      "path": "todo/2025-12-qlog-development.md"
+    },
+    {
+      "basename": "todo",
+      "path": "todo/todo.md"
+    },
+    {
+      "basename": "todo",
+      "path": "todo/todo.base"
+    },
+    {
       "basename": "Home",
       "path": "bases/Home.base"
     },
@@ -25,14 +41,6 @@
       "path": "slides/obsidian-integration.md"
     },
     {
-      "basename": "statistic",
-      "path": "special/statistic.md"
-    },
-    {
-      "basename": "todo",
-      "path": "special/todo.md"
-    },
-    {
       "basename": "2025-12-08",
       "path": "diary/2025-12-08.md"
     },
@@ -47,18 +55,6 @@
     {
       "basename": "projects",
       "path": "special/projects.md"
-    },
-    {
-      "basename": "todo",
-      "path": "todo/todo.md"
-    },
-    {
-      "basename": "2025-12-qlog-development",
-      "path": "todo/2025-12-qlog-development.md"
-    },
-    {
-      "basename": "todo",
-      "path": "todo/todo.base"
     },
     {
       "basename": "zootopia",

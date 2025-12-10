@@ -22,9 +22,7 @@ const { Content } = await render(todo);
 
 <BaseLayout seoData={seoData}>
   <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Todo header -->
     <header class="mb-8">
-      <!-- Date and status -->
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <time
           datetime={todo.data.date.toISOString()}
@@ -37,7 +35,6 @@ const { Content } = await render(todo);
           })}
         </time>
         
-        <!-- Priority badge -->
         {todo.data.priority && (
           <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
             todo.data.priority === 'high' 
@@ -50,7 +47,6 @@ const { Content } = await render(todo);
           </span>
         )}
         
-        <!-- Status badge -->
         {todo.data.status && (
           <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
             todo.data.status === 'done' 
@@ -64,21 +60,17 @@ const { Content } = await render(todo);
         )}
       </div>
 
-      <!-- Title -->
       <h1 class="text-4xl font-bold text-primary-900 dark:text-primary-100 mb-4">
         {todo.data.title}
       </h1>
 
-      <!-- Description -->
       {todo.data.description && (
         <p class="text-xl text-primary-700 dark:text-primary-300 mb-6">
           {todo.data.description}
         </p>
       )}
 
-      <!-- Metadata -->
       <div class="flex flex-wrap items-center gap-4 text-sm text-primary-600 dark:text-primary-400">
-        <!-- Category -->
         {todo.data.category && (
           <div class="flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -88,7 +80,6 @@ const { Content } = await render(todo);
           </div>
         )}
 
-        <!-- Due date -->
         {todo.data.dueDate && (
           <div class="flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -98,7 +89,6 @@ const { Content } = await render(todo);
           </div>
         )}
 
-        <!-- Estimated time -->
         {todo.data.estimatedTime && (
           <div class="flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -109,15 +99,13 @@ const { Content } = await render(todo);
         )}
       </div>
 
-      <!-- Tags -->
       {todo.data.tags && todo.data.tags.length > 0 && (
         <div class="mt-4">
-          <Tags tags={todo.data.tags} />
+          <Tags tags={todo.data.tags} basePath="/todo/tag" />
         </div>
       )}
     </header>
 
-    <!-- Cover image -->
     {todo.data.image && !todo.data.hideCoverImage && (
       <figure class="mb-8">
         <img
@@ -133,12 +121,10 @@ const { Content } = await render(todo);
       </figure>
     )}
 
-    <!-- Todo content -->
     <div class="prose prose-lg dark:prose-invert max-w-none">
       <Content />
     </div>
 
-    <!-- Additional metadata -->
     {(todo.data.dependencies && todo.data.dependencies.length > 0) || todo.data.assignedTo || todo.data.notes ? (
       <div class="mt-8 p-6 bg-primary-50 dark:bg-primary-800 rounded-lg">
         <h3 class="text-lg font-semibold text-primary-900 dark:text-primary-100 mb-4">
@@ -187,7 +173,6 @@ const { Content } = await render(todo);
       </div>
     ) : null}
 
-    <!-- Navigation -->
     {(adjacentTodos.prev || adjacentTodos.next) && (
       <div class="mt-12 pt-8 border-t border-primary-200 dark:border-primary-700">
         <div class="flex justify-between items-center">

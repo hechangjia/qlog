@@ -1,24 +1,15 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { getCollection, getEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import { siteConfig } from '@/config';
 import ActivityHeatmap from '@/components/ActivityHeatmap.astro';
 import MonthlyTrends from '@/components/MonthlyTrends.astro';
 import DataviewResult from '@/components/DataviewResult.astro';
-import { groupDataviewBlocks } from '@/utils/dataview-parser';
 
 // Get all content collections
 const diaryEntries = await getCollection('diary');
 const todoItems = await getCollection('todo');
 const posts = await getCollection('posts');
-
-// Get the statistic page content from special collection
-const statisticPage = await getEntry('special', 'statistic');
-let dataviewGroups: Record<string, any[]> = {};
-
-if (statisticPage && statisticPage.body) {
-  dataviewGroups = groupDataviewBlocks(statisticPage.body);
-}
 
 // Filter out drafts in production
 const isDev = import.meta.env.DEV;
@@ -68,7 +59,8 @@ const recentTodoItems = visibleTodoItems.filter(todo => todo.data.date >= oneWee
 const recentPosts = visiblePosts.filter(post => post.data.date >= oneWeekAgo);
 
 // Calculate completion rate
-const completionRate = totalTodoItems > 0 ? Math.round((completedTodos / totalTodoItems) * 100) : 0;
+const completionRate = totalTodoItems > 0 ?
+Math.round((completedTodos / totalTodoItems) * 100) : 0;
 
 // Get most common tags (including posts, diary, and todo)
 const allTags = [
@@ -117,7 +109,6 @@ const seoData = {
 <BaseLayout seoData={seoData}>
   <div class="min-h-screen bg-gradient-to-b from-primary-50 to-primary-100 dark:from-primary-900 dark:to-primary-800">
     <div class="container mx-auto px-4 py-8">
-      <!-- Header -->
       <header class="mb-8">
         <h1 class="text-4xl font-bold text-primary-900 dark:text-primary-100 mb-4">
           {pageTitle}
@@ -127,9 +118,7 @@ const seoData = {
         </p>
       </header>
 
-      <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        <!-- 总内容 -->
         <div class="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-2 bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border-2 border-highlight-300 dark:border-highlight-700">
           <div class="flex items-center justify-between">
             <div>
@@ -147,7 +136,6 @@ const seoData = {
           </p>
         </div>
 
-        <!-- 博客文章 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <div class="flex items-center justify-between">
             <div>
@@ -165,7 +153,6 @@ const seoData = {
           </p>
         </div>
 
-        <!-- 日记条目 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <div class="flex items-center justify-between">
             <div>
@@ -183,7 +170,6 @@ const seoData = {
           </p>
         </div>
 
-        <!-- 待办事项 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <div class="flex items-center justify-between">
             <div>
@@ -192,7 +178,7 @@ const seoData = {
             </div>
             <div class="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
               <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
               </svg>
             </div>
           </div>
@@ -201,7 +187,6 @@ const seoData = {
           </p>
         </div>
 
-        <!-- 完成率 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <div class="flex items-center justify-between">
             <div>
@@ -219,7 +204,6 @@ const seoData = {
           </p>
         </div>
 
-        <!-- 平均进度 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <div class="flex items-center justify-between">
             <div>
@@ -238,19 +222,15 @@ const seoData = {
         </div>
       </div>
 
-      <!-- Activity Heatmap -->
       <div class="mt-8">
         <ActivityHeatmap diaryEntries={visibleDiaryEntries} todoItems={visibleTodoItems} posts={visiblePosts} weeks={52} />
       </div>
 
-      <!-- Monthly Trends -->
       <div class="mt-8">
         <MonthlyTrends diaryEntries={visibleDiaryEntries} todoItems={visibleTodoItems} posts={visiblePosts} months={12} />
       </div>
 
-      <!-- Charts and Detailed Statistics -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <!-- 心情分布 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">心情分布</h2>
           <div class="space-y-4">
@@ -288,7 +268,6 @@ const seoData = {
           </div>
         </div>
 
-        <!-- 优先级分布 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">待办优先级分布</h2>
           <div class="space-y-4">
@@ -321,13 +300,11 @@ const seoData = {
           </div>
         </div>
 
-        <!-- 状态概览 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">待办状态概览</h2>
           <div class="flex items-center justify-center h-64">
             {totalTodoItems > 0 ? (
               <div class="relative w-48 h-48">
-                <!-- Pie chart visualization -->
                 <svg viewBox="0 0 100 100" class="w-full h-full">
                   {(() => {
                     const angles = {
@@ -345,9 +322,7 @@ const seoData = {
                         const y1 = 50 + 40 * Math.sin(currentAngle * Math.PI / 180);
                         const x2 = 50 + 40 * Math.cos((currentAngle + angle) * Math.PI / 180);
                         const y2 = 50 + 40 * Math.sin((currentAngle + angle) * Math.PI / 180);
-
                         const largeArcFlag = angle > 180 ? 1 : 0;
-
                         sections.push(`
                           <path
                             d="M50,50 L${x1},${y1} A40,40 0 ${largeArcFlag},1 ${x2},${y2} Z"
@@ -360,11 +335,9 @@ const seoData = {
                             stroke-width="2"
                           />
                         `);
-
                         currentAngle += angle;
                       }
                     });
-
                     return sections.join('');
                   })()}
                 </svg>
@@ -398,7 +371,6 @@ const seoData = {
           </div>
         </div>
 
-        <!-- 最常用标签 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-primary-200 dark:border-primary-700">
           <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4">最常用标签</h2>
           <div class="space-y-3">
@@ -424,9 +396,7 @@ const seoData = {
         </div>
       </div>
 
-      <!-- Deadlines Section -->
       <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- 逾期待办 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-red-200 dark:border-red-900">
           <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4 flex items-center gap-2">
             <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -468,7 +438,6 @@ const seoData = {
           </div>
         </div>
 
-        <!-- 即将到期 -->
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-6 border border-blue-200 dark:border-blue-900">
           <h2 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-4 flex items-center gap-2">
             <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -511,7 +480,6 @@ const seoData = {
         </div>
       </div>
 
-      <!-- Dataview Queries Section -->
       <div class="mt-12">
         <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-8 border border-primary-200 dark:border-primary-700">
           <div class="flex items-center gap-3 mb-6">
@@ -519,61 +487,27 @@ const seoData = {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
             <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100">
-              Obsidian Dataview 查询示例
+              数据透视 (Dataview Syntax)
             </h2>
           </div>
 
           <p class="text-primary-600 dark:text-primary-400 mb-6">
-            以下是使用 Dataview 查询语法执行的实时数据统计。
+            以下是使用 Dataview 语法直接查询的实时统计数据。
           </p>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {Object.entries(dataviewGroups).map(([groupName, blocks]) => (
-              <div class="space-y-4 {Object.keys(dataviewGroups).length === 1 || groupName.includes('综合') ? 'lg:col-span-2' : ''}">
-                <h3 class="text-lg font-semibold text-primary-900 dark:text-primary-100 flex items-center gap-2">
-                  {groupName.includes('日记') && (
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                  )}
-                  {groupName.includes('待办') && (
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                    </svg>
-                  )}
-                  {groupName.includes('综合') && (
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                  )}
-                  {groupName}
-                </h3>
-
-                {groupName.includes('综合') ? (
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {blocks.map(block => (
-                      <DataviewResult
-                        title={block.title}
-                        description={block.description}
-                        query={block.query}
-                        collections={{ diary: visibleDiaryEntries, todo: visibleTodoItems, posts: visiblePosts }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <>
-                    {blocks.map(block => (
-                      <DataviewResult
-                        title={block.title}
-                        description={block.description}
-                        query={block.query}
-                        collections={{ diary: visibleDiaryEntries, todo: visibleTodoItems, posts: visiblePosts }}
-                      />
-                    ))}
-                  </>
-                )}
-              </div>
-            ))}
+            <DataviewResult
+              title="😊 最近的心情"
+              description="最近 10 篇日记的心情记录"
+              query='TABLE date, mood, weather FROM "diary" SORT date DESC LIMIT 10'
+              collections={{ diary: visibleDiaryEntries }}
+            />
+            <DataviewResult
+              title="📰 最近发布的文章"
+              description="最近发布的 5 篇博客文章"
+              query='TABLE date, title, tags FROM "posts" SORT date DESC LIMIT 5'
+              collections={{ posts: visiblePosts }}
+            />
           </div>
         </div>
       </div>

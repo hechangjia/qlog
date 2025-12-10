@@ -1,0 +1,61 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { siteConfig } from '@/config';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DiaryCard from '@/components/DiaryCard.astro';
+import Icon from '@/components/Icon.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const allDiary = await getCollection('diary');
+  const uniqueTags = [...new Set(allDiary.flatMap(entry => entry.data.tags || []))];
+
+  return uniqueTags.map(tag => ({
+    params: { tag },
+    props: { tag, allDiary }
+  }));
+};
+
+const { tag, allDiary } = Astro.props;
+
+const filteredDiary = allDiary.filter(entry => 
+  entry.data.tags && entry.data.tags.includes(tag)
+).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const pageTitle = `日记标签: "${tag}"`;
+const seoData = {
+  title: `${pageTitle} | ${siteConfig.title}`,
+  description: `标签为 ${tag} 的日记`,
+  canonical: Astro.url.href,
+  ogType: 'website' as const
+};
+---
+
+<BaseLayout seoData={seoData}>
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <header class="mb-8">
+      <a href="/diary" class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800 mb-4 transition-colors">
+        <Icon name="arrow-left" class="w-4 h-4 mr-1" />
+        返回日记列表
+      </a>
+      <h1 class="text-2xl font-bold text-primary-900 dark:text-primary-50 flex items-center gap-2">
+        <Icon name="tag" class="w-6 h-6 text-pink-500" />
+        {pageTitle}
+      </h1>
+      <p class="mt-2 text-primary-600 dark:text-primary-400">
+        共找到 {filteredDiary.length} 篇相关日记
+      </p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {filteredDiary.length > 0 ? (
+        filteredDiary.map(diary => (
+          /* [修复] 这里修改为 entry={diary} */
+          <DiaryCard entry={diary} />
+        ))
+      ) : (
+        <p>没有找到相关日记。</p>
+      )}
+    </div>
+  </div>
+</BaseLayout>

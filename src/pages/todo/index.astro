@@ -5,125 +5,74 @@ import { generatePageSEO } from '@/utils/seo';
 import { shouldShowContent, sortPostsByDate, extractTags } from '@/utils/markdown';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Tags from '@/components/Tags.astro';
-import Pagination from '@/components/Pagination.astro';
 import Icon from '@/components/Icon.astro';
 import TodoCard from '@/components/TodoCard.astro';
 import DataviewResult from '@/components/DataviewResult.astro';
 import { groupDataviewBlocks } from '@/utils/dataview-parser';
 
-// Get all todos
+// --- 数据获取 ---
 const allTodos = await getCollection('todo');
 
-// Get the todo page content from special collection
+// 读取 Markdown 文件中的 Dataview 查询
 const todoPage = await getEntry('special', 'todo');
 let dataviewGroups: Record<string, any[]> = {};
-
 if (todoPage && todoPage.body) {
   dataviewGroups = groupDataviewBlocks(todoPage.body);
 }
 
-// Filter todos based on environment
+// 过滤和排序 (仅过滤草稿)
 const isDev = import.meta.env.DEV;
 const visibleTodos = allTodos.filter(todo => shouldShowContent(todo, isDev));
-
-// Sort todos by date (newest first)
 const sortedTodos = sortPostsByDate(visibleTodos);
 
-// Filter by status if specified
-const url = new URL(Astro.request.url);
-const statusFilter = url.searchParams.get('status');
-const priorityFilter = url.searchParams.get('priority');
-const categoryFilter = url.searchParams.get('category');
+// --- 提取元数据 (用于生成筛选按钮) ---
+const allTags = extractTags(sortedTodos);
+const allStatuses = Array.from(new Set(sortedTodos.map(todo => todo.data.status).filter(Boolean)));
+const allPriorities = Array.from(new Set(sortedTodos.map(todo => todo.data.priority).filter(Boolean)));
+const allCategories = Array.from(new Set(sortedTodos.map(todo => todo.data.category).filter(Boolean)));
 
-const filteredTodos = sortedTodos.filter(todo => {
-  if (statusFilter && todo.data.status !== statusFilter) return false;
-  if (priorityFilter && todo.data.priority !== priorityFilter) return false;
-  if (categoryFilter && todo.data.category !== categoryFilter) return false;
-  return true;
-});
-
-// Pagination
-const todosPerPage = 15;
-const totalTodos = filteredTodos.length;
-const totalPages = Math.ceil(totalTodos / todosPerPage);
-const currentPage = 1; // This is the first page
-const startIndex = 0;
-const endIndex = Math.min(todosPerPage, totalTodos);
-const paginatedTodos = filteredTodos.slice(startIndex, endIndex);
-
-// Extract all unique tags, statuses, priorities, and categories
-const allTags = extractTags(filteredTodos);
-const allStatuses = Array.from(new Set(filteredTodos.map(todo => todo.data.status).filter(Boolean)));
-const allPriorities = Array.from(new Set(filteredTodos.map(todo => todo.data.priority).filter(Boolean)));
-const allCategories = Array.from(new Set(filteredTodos.map(todo => todo.data.category).filter(Boolean)));
-
-// Generate SEO data
+// SEO
 const pageTitle = 'Todo List';
-const pageDescription = `Personal task management system. Total ${totalTodos} todos, ${filteredTodos.filter(t => t.data.status === 'done').length} completed.`;
-
+const pageDescription = `Personal task management system. Total ${sortedTodos.length} todos.`;
 const seoData = {
   title: `${pageTitle} | ${siteConfig.title}`,
   description: pageDescription,
   canonical: Astro.url.href,
   ogType: 'website' as const
 };
-
-// Pagination info
-const baseUrl = '/todo';
-const pagination = {
-  currentPage,
-  totalPages,
-  hasNext: currentPage < totalPages,
-  hasPrev: false,
-  nextUrl: totalPages > 1 ? '/todo/2' : undefined,
-  prevUrl: undefined
-};
 ---
 
 <BaseLayout seoData={seoData}>
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 mb-12" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Header -->
       <header class="mb-8">
         <div class="flex items-start justify-between mb-3">
           <h1 class="text-lg font-bold text-primary-900 dark:text-primary-50">
             {pageTitle}
           </h1>
           <div class="flex items-center space-x-2">
-            <a
-              href="/todo/rss.xml"
-              class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to Todo RSS feed"
-              data-no-swup
-            >
-              <Icon name="rss" class="w-4 h-4 mr-1.5" />
-              RSS Feed
+            <a href="/todo/rss.xml" class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 bg-highlight-50 rounded-lg border border-highlight-200 hover:bg-highlight-100 transition-all duration-200">
+              <Icon name="rss" class="w-4 h-4 mr-1.5" /> RSS Feed
             </a>
           </div>
         </div>
         <p class="text-base text-primary-600 dark:text-primary-300">
-          Personal task management system. Total <strong>{totalTodos}</strong> todos, 
-          <strong> {filteredTodos.filter(t => t.data.status === 'done').length} </strong> completed.
+          管理你的任务清单。共 <strong>{sortedTodos.length}</strong> 个任务。
+          <span id="filtered-count-display" class="hidden ml-2 bg-highlight-100 text-highlight-800 px-2 py-0.5 rounded-full text-xs">
+            筛选出 <span id="filtered-count">0</span> 个
+          </span>
         </p>
 
-        <!-- Filters -->
-        <div class="mt-4 flex flex-wrap gap-4">
-          <!-- Status filter -->
+        <div class="mt-4 flex flex-wrap gap-4" id="todo-filters">
           {allStatuses.length > 0 && (
             <div>
               <span class="text-sm text-primary-500 dark:text-primary-400 mb-1 block">Status:</span>
               <div class="flex flex-wrap gap-2">
-                <a
-                  href="/todo"
-                  class={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${!statusFilter ? 'bg-highlight-100 dark:bg-highlight-900 text-highlight-800 dark:text-highlight-200' : 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700'}`}
-                >
+                <a href="/todo" data-filter-type="status" data-filter-value="all" class="filter-btn inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors">
                   All
                 </a>
                 {allStatuses.map(status => (
-                  <a
-                    href={`/todo?status=${status}`}
-                    class={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${statusFilter === status ? 'bg-highlight-100 dark:bg-highlight-900 text-highlight-800 dark:text-highlight-200' : 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700'}`}
-                  >
+                  <a href={`/todo?status=${status}`} data-filter-type="status" data-filter-value={status} class="filter-btn inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors">
                     {status}
                   </a>
                 ))}
@@ -131,22 +80,15 @@ const pagination = {
             </div>
           )}
 
-          <!-- Priority filter -->
           {allPriorities.length > 0 && (
             <div>
               <span class="text-sm text-primary-500 dark:text-primary-400 mb-1 block">Priority:</span>
               <div class="flex flex-wrap gap-2">
-                <a
-                  href={statusFilter ? `/todo?status=${statusFilter}` : '/todo'}
-                  class={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${!priorityFilter ? 'bg-highlight-100 dark:bg-highlight-900 text-highlight-800 dark:text-highlight-200' : 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700'}`}
-                >
+                <a href="/todo" data-filter-type="priority" data-filter-value="all" class="filter-btn inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors">
                   All
                 </a>
                 {allPriorities.map(priority => (
-                  <a
-                    href={`/todo?${statusFilter ? `status=${statusFilter}&` : ''}priority=${priority}`}
-                    class={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${priorityFilter === priority ? 'bg-highlight-100 dark:bg-highlight-900 text-highlight-800 dark:text-highlight-200' : 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700'}`}
-                  >
+                  <a href={`/todo?priority=${priority}`} data-filter-type="priority" data-filter-value={priority} class="filter-btn inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors">
                     {priority}
                   </a>
                 ))}
@@ -154,22 +96,15 @@ const pagination = {
             </div>
           )}
 
-          <!-- Category filter -->
           {allCategories.length > 0 && (
             <div>
               <span class="text-sm text-primary-500 dark:text-primary-400 mb-1 block">Category:</span>
               <div class="flex flex-wrap gap-2">
-                <a
-                  href={`/todo?${statusFilter ? `status=${statusFilter}${priorityFilter ? `&priority=${priorityFilter}` : ''}` : priorityFilter ? `priority=${priorityFilter}` : ''}`}
-                  class={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${!categoryFilter ? 'bg-highlight-100 dark:bg-highlight-900 text-highlight-800 dark:text-highlight-200' : 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700'}`}
-                >
+                <a href="/todo" data-filter-type="category" data-filter-value="all" class="filter-btn inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors">
                   All
                 </a>
                 {allCategories.map(category => (
-                  <a
-                    href={`/todo?${statusFilter ? `status=${statusFilter}${priorityFilter ? `&priority=${priorityFilter}` : ''}` : priorityFilter ? `priority=${priorityFilter}` : ''}${(statusFilter || priorityFilter) ? '&' : ''}category=${category}`}
-                    class={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${categoryFilter === category ? 'bg-highlight-100 dark:bg-highlight-900 text-highlight-800 dark:text-highlight-200' : 'bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700'}`}
-                  >
+                  <a href={`/todo?category=${category}`} data-filter-type="category" data-filter-value={category} class="filter-btn inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors">
                     {category}
                   </a>
                 ))}
@@ -180,192 +115,199 @@ const pagination = {
       </header>
 
       <div class="relative">
-        <!-- Main content -->
-        <div class="max-w-none">
-          {paginatedTodos.length > 0 ? (
-            <>
-              <!-- Todos list -->
-              <div class="space-y-4 mb-12">
-                {paginatedTodos.map((todo, index) => (
-                  <TodoCard todo={todo} eager={index < 2} />
-                ))}
-              </div>
-
-              <!-- Pagination -->
-              <Pagination pagination={pagination} baseUrl={baseUrl} />
-            </>
-          ) : (
-            <!-- No todos -->
-            <div class="text-center py-16">
-              <Icon name="check-circle" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
-              <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-                {statusFilter === 'done' ? 'No completed todos yet' : 
-                 statusFilter ? `No todos with status "${statusFilter}"` :
-                 'No todos yet'}
-              </h2>
-              <p class="text-primary-600 dark:text-primary-300 mb-8">
-                {statusFilter === 'done' ? 'Start completing your todos to see them here!' :
-                 statusFilter ? 'Try different filters or create new todos with this status.' :
-                 'Start organizing your tasks! Add todos to the <code>content/todo/</code> directory.'}
-              </p>
-              {isDev && !statusFilter && !priorityFilter && !categoryFilter && (
-                <div class="max-w-md mx-auto p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p class="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Dev Mode:</strong> Add some todos to the <code>content/todo/</code> directory to see them here.
-                  </p>
+        <div class="max-w-none" id="todo-list-container">
+          {sortedTodos.length > 0 ? (
+            <div class="space-y-4 mb-12">
+              {/* 渲染所有任务，让 JS 控制显示/隐藏 */}
+              {sortedTodos.map((todo) => (
+                <div 
+                  class="todo-item-wrapper transition-all duration-300 ease-in-out"
+                  data-status={todo.data.status}
+                  data-priority={todo.data.priority}
+                  data-category={todo.data.category}
+                >
+                  <TodoCard todo={todo} />
                 </div>
-              )}
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-16">
+              <Icon name="check-circle" class="w-16 h-16 text-primary-400 mx-auto mb-6" />
+              <h2 class="text-2xl font-semibold text-primary-900 mb-4">没有找到任务</h2>
             </div>
           )}
+          
+          <div id="no-filter-results" class="hidden text-center py-16">
+             <Icon name="search" class="w-16 h-16 text-primary-300 mx-auto mb-6" />
+             <h2 class="text-xl font-medium text-primary-600">没有匹配筛选条件的任务</h2>
+             <button id="clear-filters-btn" class="mt-4 px-4 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg text-sm transition-colors">
+               清除筛选
+             </button>
+          </div>
         </div>
 
-        <!-- Mobile sidebar - appears below content on mobile/tablet -->
         <div class="xl:hidden mt-12 space-y-6">
-          <!-- Tags -->
-          {allTags.length > 0 && (
-            <Tags tags={allTags} />
-          )}
+          {allTags.length > 0 && <Tags tags={allTags} basePath="/todo/tag" />}
         </div>
-
-        <!-- Desktop sidebar - floats to the right of the content container -->
         <div class="hidden xl:block absolute top-0 left-full ml-8 w-64">
           <div class="sticky top-24 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pb-6">
-            <!-- Tags -->
-            {allTags.length > 0 && (
-              <Tags tags={allTags} />
-            )}
+            {allTags.length > 0 && <Tags tags={allTags} basePath="/todo/tag" />}
           </div>
         </div>
       </div>
-
-      <!-- Dataview Queries Section -->
-      <div class="mt-16 mb-12">
-        <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-8 border border-primary-200 dark:border-primary-700">
-          <div class="flex items-center gap-3 mb-6">
-            <svg class="w-8 h-8 text-accent-600 dark:text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-            </svg>
-            <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100">
-              任务进度 & Dataview 查询
-            </h2>
-          </div>
-
-          <p class="text-primary-600 dark:text-primary-400 mb-6">
-            以下是使用 Dataview 查询语法执行的实时任务统计和进度追踪。
-          </p>
-
-          <!-- Task Progress Stats -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-lg border border-green-200 dark:border-green-700">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-green-600 dark:text-green-400">已完成</span>
-                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <p class="text-3xl font-bold text-green-700 dark:text-green-300">
-                {filteredTodos.filter(t => t.data.status === 'done').length}
-              </p>
-              <p class="text-xs text-green-600 dark:text-green-400 mt-1">
-                {totalTodos > 0 ? Math.round((filteredTodos.filter(t => t.data.status === 'done').length / totalTodos) * 100) : 0}% 完成率
-              </p>
-            </div>
-
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-lg border border-blue-200 dark:border-blue-700">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-blue-600 dark:text-blue-400">进行中</span>
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-              </div>
-              <p class="text-3xl font-bold text-blue-700 dark:text-blue-300">
-                {filteredTodos.filter(t => t.data.status === 'in-progress').length}
-              </p>
-              <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">正在处理</p>
-            </div>
-
-            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-6 rounded-lg border border-yellow-200 dark:border-yellow-700">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-yellow-600 dark:text-yellow-400">待处理</span>
-                <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <p class="text-3xl font-bold text-yellow-700 dark:text-yellow-300">
-                {filteredTodos.filter(t => t.data.status === 'todo').length}
-              </p>
-              <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">等待开始</p>
-            </div>
-
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-lg border border-purple-200 dark:border-purple-700">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-purple-600 dark:text-purple-400">总任务数</span>
-                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                </svg>
-              </div>
-              <p class="text-3xl font-bold text-purple-700 dark:text-purple-300">
-                {totalTodos}
-              </p>
-              <p class="text-xs text-purple-600 dark:text-purple-400 mt-1">全部任务</p>
-            </div>
-          </div>
-
-          <!-- Dataview Queries -->
-          <div class="space-y-6">
-            {Object.entries(dataviewGroups).map(([groupName, blocks]) => (
-              <div>
-                <h3 class="text-lg font-semibold text-primary-900 dark:text-primary-100 mb-4">
-                  {groupName}
-                </h3>
-
-                {groupName.includes('清单') ? (
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {blocks.map(block => (
-                      <DataviewResult
-                        title={block.title}
-                        description={block.description}
-                        query={block.query}
-                        collections={{ todo: visibleTodos }}
-                      />
+      
+      {Object.keys(dataviewGroups).length > 0 && (
+        <div class="mt-16 mb-12">
+            <div class="bg-white dark:bg-primary-800 rounded-xl shadow-lg p-8 border border-primary-200 dark:border-primary-700">
+                <div class="flex items-center gap-3 mb-6">
+                    <Icon name="database" class="w-8 h-8 text-accent-600" />
+                    <h2 class="text-2xl font-bold text-primary-900 dark:text-primary-100">
+                      我的查询视图 (From Markdown)
+                    </h2>
+                </div>
+                <div class="space-y-8">
+                    {Object.entries(dataviewGroups).map(([groupName, blocks]) => (
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-primary-800 dark:text-primary-200 border-l-4 border-accent-500 pl-3">
+                            {groupName}
+                        </h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {blocks.map(block => (
+                            <DataviewResult 
+                                title={block.title} 
+                                description={block.description} 
+                                query={block.query} 
+                                collections={{ todo: visibleTodos }} 
+                            />
+                            ))}
+                        </div>
+                    </div>
                     ))}
-                  </div>
-                ) : (
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {blocks.map(block => (
-                      <DataviewResult
-                        title={block.title}
-                        description={block.description}
-                        query={block.query}
-                        collections={{ todo: visibleTodos }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                </div>
+            </div>
         </div>
-      </div>
+      )}
     </div>
   </div>
 </BaseLayout>
 
-<style>
-  /* Todo specific styles */
-  .todo-completed {
-    @apply opacity-75;
+<script>
+  // 客户端过滤脚本
+  function initTodoFiltering() {
+    const todoItems = document.querySelectorAll('.todo-item-wrapper');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const noResultsMsg = document.getElementById('no-filter-results');
+    const filteredCountDisplay = document.getElementById('filtered-count-display');
+    const filteredCountSpan = document.getElementById('filtered-count');
+    const clearBtn = document.getElementById('clear-filters-btn');
+
+    function applyFilters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const statusFilter = urlParams.get('status');
+      const priorityFilter = urlParams.get('priority');
+      const categoryFilter = urlParams.get('category');
+
+      let visibleCount = 0;
+
+      // 1. 过滤项目
+      todoItems.forEach(item => {
+        const el = item as HTMLElement;
+        const status = el.dataset.status;
+        const priority = el.dataset.priority;
+        const category = el.dataset.category;
+
+        let isVisible = true;
+        if (statusFilter && status !== statusFilter) isVisible = false;
+        if (priorityFilter && priority !== priorityFilter) isVisible = false;
+        if (categoryFilter && category !== categoryFilter) isVisible = false;
+
+        if (isVisible) {
+          el.style.display = 'block';
+          visibleCount++;
+        } else {
+          el.style.display = 'none';
+        }
+      });
+
+      // 2. 更新空状态和计数
+      if (visibleCount === 0) {
+        noResultsMsg?.classList.remove('hidden');
+      } else {
+        noResultsMsg?.classList.add('hidden');
+      }
+
+      if (statusFilter || priorityFilter || categoryFilter) {
+        filteredCountDisplay?.classList.remove('hidden');
+        if (filteredCountSpan) filteredCountSpan.textContent = visibleCount.toString();
+      } else {
+        filteredCountDisplay?.classList.add('hidden');
+      }
+
+      // 3. 更新按钮样式
+      filterBtns.forEach(btn => {
+        const type = btn.getAttribute('data-filter-type');
+        const value = btn.getAttribute('data-filter-value');
+        
+        let isActive = false;
+        if (type === 'status') isActive = value === (statusFilter || 'all');
+        if (type === 'priority') isActive = value === (priorityFilter || 'all');
+        if (type === 'category') isActive = value === (categoryFilter || 'all');
+
+        if (isActive) {
+          btn.classList.add('bg-highlight-100', 'text-highlight-800', 'ring-2', 'ring-highlight-300');
+          btn.classList.remove('bg-primary-100', 'text-primary-700', 'hover:bg-primary-200');
+        } else {
+          btn.classList.remove('bg-highlight-100', 'text-highlight-800', 'ring-2', 'ring-highlight-300');
+          btn.classList.add('bg-primary-100', 'text-primary-700', 'hover:bg-primary-200');
+        }
+      });
+    }
+
+    // 监听 URL 变化 (前进/后退)
+    window.addEventListener('popstate', applyFilters);
+
+    // 拦截按钮点击，使用 pushState 避免刷新
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = (btn as HTMLAnchorElement).getAttribute('href');
+        if (href) {
+          // 构建新的 URL
+          const targetUrl = new URL(href, window.location.origin);
+          // 保留其他类型的参数 (例如点了 priority，保留 status)
+          const currentParams = new URLSearchParams(window.location.search);
+          const newParams = targetUrl.searchParams;
+          
+          // 合并参数逻辑
+          const type = btn.getAttribute('data-filter-type');
+          const value = btn.getAttribute('data-filter-value');
+          
+          if (value === 'all') {
+            currentParams.delete(type!);
+          } else {
+            currentParams.set(type!, value!);
+          }
+          
+          const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+          window.history.pushState(null, '', newUrl);
+          applyFilters();
+        }
+      });
+    });
+
+    if(clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        window.history.pushState(null, '', window.location.pathname);
+        applyFilters();
+      });
+    }
+
+    // 初始化应用
+    applyFilters();
   }
-  
-  .todo-high-priority {
-    @apply border-l-4 border-red-500;
-  }
-  
-  .todo-medium-priority {
-    @apply border-l-4 border-yellow-500;
-  }
-  
-  .todo-low-priority {
-    @apply border-l-4 border-green-500;
-  }
-</style>
+
+  // 支持 View Transitions (Astro/Swup)
+  document.addEventListener('astro:page-load', initTodoFiltering);
+  // 首次加载
+  initTodoFiltering();
+</script>

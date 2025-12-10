@@ -13,15 +13,7 @@ description: 使用 Dataview 查询展示任务进度和统计
 显示所有高优先级的待办任务
 
 ```dataview
-TABLE WITHOUT ID
-  file.link AS "任务",
-  status AS "状态",
-  dueDate AS "截止日期",
-  category AS "类别"
-FROM "todo"
-WHERE priority = "high" AND status != "done"
-SORT dueDate ASC
-LIMIT 10
+TABLE date, category FROM "todo" WHERE priority = "high"
 ```
 
 ### 进行中的任务
@@ -99,3 +91,10 @@ WHERE priority != null
 GROUP BY priority
 SORT priority ASC
 ```
+
+
+## 分组标题 (例如: 每日跟进)
+
+### 查询标题 (例如: 🔥 高优先级)
+这里可以写一段描述文字。
+

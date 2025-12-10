@@ -27,25 +27,12 @@ const result = await executeDataviewQuery(query, collections);
   {description && <p class="result-description">{description}</p>}
 
   <div class="result-container">
-    <!-- Show query -->
-    <details class="query-details">
-      <summary class="query-summary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="16 18 22 12 16 6"></polyline>
-          <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
-        查看查询语句
-      </summary>
-      <pre class="query-code"><code>{query.trim()}</code></pre>
-    </details>
-
-    <!-- Display results based on query type -->
     {result.type === 'TABLE' && !result.grouped && (
       <div class="table-container">
         <table class="result-table">
           <thead>
             <tr>
-              <th>标题</th>
+              {!result.withoutId && <th>标题</th>}
               {result.fields?.map(field => (
                 <th>{getFieldDisplayName(field)}</th>
               ))}
@@ -55,19 +42,22 @@ const result = await executeDataviewQuery(query, collections);
             {result.items.length > 0 ? (
               result.items.map((item: any) => (
                 <tr>
-                  <td>
-                    <a href={`/${item.collection}/${item.id}`} class="item-link">
-                      {item.data.title}
-                    </a>
-                  </td>
+                  {!result.withoutId && (
+                    <td>
+                      <a href={`/${item.collection}/${item.id}`} class="item-link">
+                        {item.data.title || item.id}
+                      </a>
+                    </td>
+                  )}
                   {result.fields?.map(field => (
-                    <td>{formatFieldValue(item, field)}</td>
+                    // 使用 set:html 来渲染 HTML 内容（如链接、进度条）
+                    <td set:html={formatFieldValue(item, field)}></td>
                   ))}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colspan={result.fields ? result.fields.length + 1 : 1} class="no-results">
+                <td colspan={(result.fields ? result.fields.length : 0) + (result.withoutId ? 0 : 1)} class="no-results">
                   暂无数据
                 </td>
               </tr>
@@ -81,404 +71,174 @@ const result = await executeDataviewQuery(query, collections);
       <div class="grouped-container">
         {Object.entries(result.grouped).map(([group, items]: [string, any[]]) => (
           <div class="group-section">
-            <h4 class="group-title">{group}</h4>
-            <table class="result-table">
-              <thead>
-                <tr>
-                  <th>标题</th>
-                  {result.fields?.map(field => (
-                    <th>{getFieldDisplayName(field)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item: any) => (
-                  <tr>
-                    <td>
-                      <a href={`/${item.collection}/${item.id}`} class="item-link">
-                        {item.data.title}
-                      </a>
-                    </td>
+            <h4 class="group-title">{group} <span class="text-xs font-normal opacity-60">({items.length})</span></h4>
+            <div class="table-container">
+                <table class="result-table">
+                <thead>
+                    <tr>
+                    {!result.withoutId && <th>标题</th>}
                     {result.fields?.map(field => (
-                      <td>{formatFieldValue(item, field)}</td>
+                        <th>{getFieldDisplayName(field)}</th>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p class="group-count">共 {items.length} 项</p>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items.map((item: any) => (
+                    <tr>
+                        {!result.withoutId && (
+                            <td>
+                            <a href={`/${item.collection}/${item.id}`} class="item-link">
+                                {item.data.title}
+                            </a>
+                            </td>
+                        )}
+                        {result.fields?.map(field => (
+                        <td set:html={formatFieldValue(item, field)}></td>
+                        ))}
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
           </div>
         ))}
       </div>
     )}
 
     {result.type === 'LIST' && (
-      <ul class="result-list">
-        {result.items.length > 0 ? (
-          result.items.map((item: any) => (
-            <li class="list-item">
-              <a href={`/${item.collection}/${item.id}`} class="item-link">
-                {item.data.title}
-              </a>
-              {item.data.description && (
-                <span class="item-description">{item.data.description}</span>
-              )}
-            </li>
-          ))
-        ) : (
-          <li class="no-results">暂无数据</li>
-        )}
-      </ul>
-    )}
-
-    {result.type === 'TASK' && (
-      <ul class="task-list">
-        {result.items.length > 0 ? (
-          result.items.map((task: any) => (
-            <li class="task-item">
-              <div class="task-header">
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  disabled
-                  class="task-checkbox"
-                />
-                <span class={`task-text ${task.completed ? 'completed' : ''}`}>
-                  {task.text}
-                </span>
-              </div>
-              {task.sourceData && (
-                <div class="task-meta">
-                  <a href={`/todo/${task.sourceFile}`} class="source-link">
-                    来自: {task.sourceData.title}
-                  </a>
-                  {task.sourceData.priority && (
-                    <span class={`priority-badge priority-${task.sourceData.priority}`}>
-                      {task.sourceData.priority}
-                    </span>
-                  )}
-                  {task.sourceData.dueDate && (
-                    <span class="due-date">
-                      截止: {new Date(task.sourceData.dueDate).toLocaleDateString('zh-CN')}
-                    </span>
-                  )}
-                </div>
-              )}
-            </li>
-          ))
-        ) : (
-          <li class="no-results">暂无任务</li>
-        )}
-      </ul>
+      <div class="list-container">
+          <ul class="result-list">
+            {result.items.length > 0 ? (
+            result.items.map((item: any) => (
+                <li class="list-item">
+                <a href={`/${item.collection}/${item.id}`} class="item-link">
+                    {item.data.title}
+                </a>
+                </li>
+            ))
+            ) : (
+            <li class="no-results">暂无数据</li>
+            )}
+        </ul>
+      </div>
     )}
   </div>
+  
+  <details class="query-details mt-2">
+      <summary class="query-summary">查看查询语句</summary>
+      <pre class="query-code"><code>{query.trim()}</code></pre>
+  </details>
 </div>
 
 <style>
   .dataview-result-card {
-    background: var(--color-surface-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    background: var(--color-surface-secondary, #ffffff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.75rem;
     padding: 1.5rem;
     margin: 1rem 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  :global(.dark) .dataview-result-card {
+      background: #1f2937;
+      border-color: #374151;
   }
 
   .result-title {
     margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-text-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-heading, #111827);
   }
+  :global(.dark) .result-title { color: #f3f4f6; }
 
   .result-description {
     margin: 0 0 1rem 0;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    color: var(--color-text-muted, #6b7280);
   }
 
   .result-container {
-    background: var(--color-surface-tertiary);
-    border-radius: var(--radius-sm);
+    background: var(--color-surface-tertiary, #f9fafb);
+    border-radius: 0.5rem;
     overflow: hidden;
+    border: 1px solid var(--color-border, #e5e7eb);
+  }
+  :global(.dark) .result-container { 
+      background: #111827; 
+      border-color: #374151;
   }
 
-  .query-details {
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-surface-secondary);
-  }
-
-  .query-summary {
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-    transition: color 0.2s ease;
-    list-style: none;
-  }
-
-  .query-summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .query-summary:hover {
-    color: var(--color-accent);
-  }
-
-  .query-summary svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .query-code {
-    margin: 0;
-    padding: 1rem;
-    border-top: 1px solid var(--color-border);
-    background: var(--color-surface-tertiary);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    line-height: 1.5;
-    overflow-x: auto;
-  }
-
-  .query-code code {
-    font-family: inherit;
-  }
-
-  /* Table styles */
+  /* Table Styles - Fixed Alignment */
   .table-container {
     overflow-x: auto;
-    padding: 1rem;
+    width: 100%;
   }
 
   .result-table {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-
-  .result-table thead {
-    background: var(--color-surface-secondary);
+    border-collapse: collapse; /* 关键：合并边框 */
+    font-size: 0.875rem;
+    white-space: nowrap; /* 关键：防止换行导致的错位 */
   }
 
   .result-table th {
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
     text-align: left;
     font-weight: 600;
-    color: var(--color-text-heading);
-    border-bottom: 2px solid var(--color-border);
+    background: var(--color-surface-secondary, #f3f4f6);
+    color: var(--color-text-heading, #374151);
+    border-bottom: 2px solid var(--color-border, #e5e7eb);
   }
+  :global(.dark) .result-table th { background: #374151; color: #e5e7eb; border-color: #4b5563; }
 
   .result-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--color-border);
-    color: var(--color-text-body);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    color: var(--color-text-body, #4b5563);
   }
+  :global(.dark) .result-table td { border-color: #374151; color: #d1d5db; }
 
+  .result-table tbody tr:last-child td { border-bottom: none; }
   .result-table tbody tr:hover {
-    background: var(--color-surface-secondary);
+    background: rgba(0,0,0,0.02);
   }
-
-  /* List styles */
-  .result-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .list-item {
-    padding: 1rem;
-    border-bottom: 1px solid var(--color-border);
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .list-item:last-child {
-    border-bottom: none;
-  }
-
-  .list-item:hover {
-    background: var(--color-surface-secondary);
-  }
+  :global(.dark) .result-table tbody tr:hover { background: rgba(255,255,255,0.05); }
 
   .item-link {
-    color: var(--color-accent);
+    color: #4f46e5; /* Indigo-600 */
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.2s ease;
   }
+  :global(.dark) .item-link { color: #818cf8; }
+  .item-link:hover { text-decoration: underline; }
 
-  .item-link:hover {
-    color: var(--color-accent-hover);
-    text-decoration: underline;
+  .group-section { padding: 1rem; }
+  .group-title { 
+      font-size: 1rem; 
+      font-weight: 700; 
+      margin-bottom: 0.5rem; 
+      color: #4b5563;
+      border-left: 4px solid #6366f1;
+      padding-left: 0.5rem;
   }
+  :global(.dark) .group-title { color: #e5e7eb; }
 
-  .item-description {
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
+  /* Query details */
+  .query-summary {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      cursor: pointer;
+      margin-top: 0.5rem;
   }
-
-  /* Task styles */
-  .task-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .task-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--color-border);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .task-item:last-child {
-    border-bottom: none;
-  }
-
-  .task-item:hover {
-    background: var(--color-surface-secondary);
-  }
-
-  .task-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .task-checkbox {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    cursor: not-allowed;
-  }
-
-  .task-text {
-    flex: 1;
-    color: var(--color-text-body);
-    font-weight: 500;
-  }
-
-  .task-text.completed {
-    text-decoration: line-through;
-    opacity: 0.6;
-  }
-
-  .task-link {
-    flex: 1;
-    color: var(--color-text-body);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
-
-  .task-link:hover {
-    color: var(--color-accent);
-  }
-
-  .source-link {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    transition: color 0.2s ease;
-    margin-right: 0.5rem;
-  }
-
-  .source-link:hover {
-    color: var(--color-accent);
-    text-decoration: underline;
-  }
-
-  .task-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    flex-wrap: wrap;
-    padding-left: 2rem; /* Align with task text (checkbox width + gap) */
-  }
-
-  .priority-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .priority-high {
-    background: rgba(239, 68, 68, 0.2);
-    color: rgb(220, 38, 38);
-  }
-
-  .priority-medium {
-    background: rgba(251, 191, 36, 0.2);
-    color: rgb(217, 119, 6);
-  }
-
-  .priority-low {
-    background: rgba(34, 197, 94, 0.2);
-    color: rgb(21, 128, 61);
-  }
-
-  .due-date {
-    color: var(--color-text-muted);
-  }
-
-  /* Grouped results */
-  .grouped-container {
-    padding: 1rem;
-  }
-
-  .group-section {
-    margin-bottom: 2rem;
-  }
-
-  .group-section:last-child {
-    margin-bottom: 0;
-  }
-
-  .group-title {
-    margin: 0 0 1rem 0;
-    padding: 0.5rem;
-    background: var(--color-surface-secondary);
-    border-radius: var(--radius-sm);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-accent);
-  }
-
-  .group-count {
-    margin: 0.5rem 0 0 0;
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    text-align: right;
-  }
-
-  .no-results {
-    text-align: center;
-    padding: 2rem;
-    color: var(--color-text-muted);
-    font-style: italic;
-  }
-
-  @media (max-width: 768px) {
-    .dataview-result-card {
-      padding: 1rem;
-    }
-
-    .result-table {
-      font-size: 0.8rem;
-    }
-
-    .result-table th,
-    .result-table td {
+  .query-code {
+      margin-top: 0.5rem;
       padding: 0.5rem;
-    }
+      background: #1f2937;
+      color: #10b981;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      overflow-x: auto;
   }
 </style>

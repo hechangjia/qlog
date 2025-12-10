@@ -7,9 +7,17 @@ export interface Props {
   currentTag?: string;
   showCount?: boolean;
   variant?: 'default' | 'outline' | 'minimal';
+  basePath?: string; // [新增] 允许传入基础路径，例如 "/todo/tag"
 }
 
-const { tags, currentTag, showCount = false, variant = 'default' } = Astro.props;
+// [修改] 默认路径保持为 /posts/tag，兼容现有文章页面
+const { 
+  tags, 
+  currentTag, 
+  showCount = false, 
+  variant = 'default', 
+  basePath = '/posts/tag' 
+} = Astro.props;
 
 // Sort tags alphabetically
 const sortedTags = [...tags].sort();
@@ -25,7 +33,7 @@ const sortedTags = [...tags].sort();
     <div class="flex flex-wrap gap-2">
       {sortedTags.map(tag => (
         <a
-          href={`/posts/tag/${encodeURIComponent(tag)}`}
+          href={`${basePath}/${encodeURIComponent(tag)}`}
           class={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
             currentTag === tag
               ? 'bg-highlight-100 dark:bg-highlight-900/40 text-highlight-800 dark:text-highlight-200 ring-1 ring-highlight-300 dark:ring-highlight-700'
